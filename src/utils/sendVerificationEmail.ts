@@ -1,15 +1,21 @@
 import { Resend } from "resend";
 import dotenv from "dotenv";
 dotenv.config();
+
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+const BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://khanut.onrender.com"
+    : "http://localhost:4000";
+
 export const sendVerificationEmail = async (email: string, token: string) => {
-  console.log(email, token);
-  const link = `http://localhost:4000/api/auth/verify-email?token=${token}`;
+  const link = `${BASE_URL}/api/auth/verify-email?token=${token}`;
+
   await resend.emails.send({
-    from: "onboarding@resend.dev",
+    from: "khanut@business.online",
     to: email,
     subject: "Verify your email",
-    html: `<p>Click to verify: <a href="${link}">${link}</a></p>`,
+    html: `<p>Click to verify your email: <a href="${link}">${link}</a></p>`,
   });
 };

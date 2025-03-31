@@ -8,7 +8,14 @@ const options: swaggerJSDoc.Options = {
       version: "1.0.0",
       description: "API documentation for Khanut Auth System",
     },
-    servers: [{ url: "http://localhost:4000" }],
+    servers: [
+      {
+        url: "http://localhost:4000",
+      },
+      {
+        url: "https://khanut.onrender.com",
+      },
+    ],
   },
   apis: ["./src/routes/*.ts"],
 };

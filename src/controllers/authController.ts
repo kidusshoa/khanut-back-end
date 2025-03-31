@@ -16,14 +16,18 @@ export const refresh = async (req: Request, res: Response) => {
     return res.status(403).json({ message: "Blacklisted token" });
 
   try {
-    const payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET!);
-    const newAccess = jwt.sign(payload as any, process.env.JWT_SECRET!, {
+    const payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as any;
+
+    const { id, role } = payload;
+
+    const newAccess = jwt.sign({ id, role }, process.env.JWT_SECRET!, {
       expiresIn: "15m",
     });
 
-    res.json({ accessToken: newAccess });
-  } catch {
-    res.status(403).json({ message: "Invalid refresh token" });
+    return res.json({ accessToken: newAccess });
+  } catch (err) {
+    console.error("❌ Token error:", err);
+    return res.status(403).json({ message: "Invalid refresh token" });
   }
 };
 

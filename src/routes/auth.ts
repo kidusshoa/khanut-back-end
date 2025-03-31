@@ -3,6 +3,7 @@ import {
   login,
   logout,
   refresh,
+  register,
   request2FA,
   requestVerification,
   verify2FA,
@@ -11,8 +12,8 @@ import {
 
 const router = Router();
 
-// Add explicit type annotations
 router.post("/login", login as (req: Request, res: Response) => void);
+router.post("/register", register as (req: Request, res: Response) => void);
 router.post("/refresh", refresh as (req: Request, res: Response) => void);
 router.post(
   "/request-verification",

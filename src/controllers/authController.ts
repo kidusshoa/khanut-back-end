@@ -108,7 +108,7 @@ export const request2FA = async (req: Request, res: Response) => {
   const user = await User.findOne({ email });
   if (!user) return res.status(404).json({ message: "User not found" });
 
-  const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
   user.twoFactorCode = code;
   user.twoFactorCodeExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 min
   await user.save();
@@ -135,4 +135,40 @@ export const verify2FA = async (req: Request, res: Response) => {
   await user.save();
 
   return res.json({ verified: true });
+};
+
+export const register = async (req: Request, res: Response) => {
+  try {
+    const { email, name, password, role } = req.body;
+
+    const exists = await User.findOne({ email });
+    if (exists)
+      return res.status(400).json({ message: "Email already in use" });
+
+    if (!["admin", "business", "customer"].includes(role)) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+
+    const newUser = new User({
+      email,
+      name,
+      password,
+      role,
+      verificationToken,
+      verified: false,
+    });
+
+    await newUser.save();
+
+    await sendVerificationEmail(email, verificationToken);
+
+    return res.status(201).json({
+      message: "Account created. Please check your email to verify.",
+    });
+  } catch (err: any) {
+    console.error("❌ Registration error:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
 };

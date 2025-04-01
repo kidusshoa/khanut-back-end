@@ -1,57 +1,56 @@
-import { Request, Response } from "express";
-import { Admin } from "../models/admin";
-import bcrypt from "bcryptjs";
+import { NextFunction, Request, Response } from "express";
+import { User } from "../models/user";
+import { ActivityLog } from "../models/activityLog";
+import { Review } from "../models/review";
+import { Business } from "../models/business";
 
-export const getSettings = async (req: Request, res: Response) => {
-  const admin = await Admin.findOne(); // defaulting to first for now
-  if (!admin) return res.status(404).json({ message: "Admin not found" });
+interface AuthRequest extends Request {
+  user: {
+    id: string;
+    role: string;
+  };
+}
 
-  res.json({
-    name: admin.name,
-    email: admin.email,
-    notify: admin.notify,
-    twoFactorAuth: admin.twoFactorAuth,
-  });
+export const isAdmin = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.user || req.user.role !== "admin") {
+    res.status(403).json({ message: "Access denied" });
+    return;
+  }
+  next();
 };
 
-export const updateSettings = async (req: Request, res: Response) => {
-  const { name, email, notify, twoFactorAuth } = req.body;
-  const admin = await Admin.findOne();
-  if (!admin) return res.status(404).json({ message: "Admin not found" });
+export const getAdminDashboard = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const [
+      totalBusinesses,
+      totalUsers,
+      pendingApprovals,
+      pendingReviews,
+      recentActivity,
+    ] = await Promise.all([
+      Business.countDocuments(),
+      User.countDocuments({ role: { $in: ["customer", "business"] } }),
+      Business.countDocuments({ approved: false }),
+      Review.countDocuments({ status: "pending" }),
+      ActivityLog.find().sort({ createdAt: -1 }).limit(5),
+    ]);
 
-  admin.name = name;
-  admin.email = email;
-  admin.notify = notify;
-  admin.twoFactorAuth = twoFactorAuth;
-  await admin.save();
-
-  res.json({ message: "Settings updated" });
-};
-
-export const addAdmin = async (req: Request, res: Response) => {
-  const { name, email, password } = req.body;
-  const exists = await Admin.findOne({ email });
-  if (exists) return res.status(400).json({ message: "Email already exists" });
-
-  const newAdmin = new Admin({ name, email, password });
-  await newAdmin.save();
-
-  res.status(201).json({ message: "Admin created" });
-};
-
-export const changePassword = async (req: Request, res: Response) => {
-  const { oldPassword, newPassword, confirmPassword } = req.body;
-  const admin = await Admin.findOne();
-  if (!admin) return res.status(404).json({ message: "Admin not found" });
-
-  const isMatch = await bcrypt.compare(oldPassword, admin.password);
-  if (!isMatch)
-    return res.status(401).json({ message: "Old password incorrect" });
-  if (newPassword !== confirmPassword)
-    return res.status(400).json({ message: "Passwords do not match" });
-
-  admin.password = newPassword;
-  await admin.save();
-
-  res.json({ message: "Password updated" });
+    res.json({
+      totalBusinesses,
+      totalUsers,
+      pendingApprovals,
+      pendingReviews,
+      recentActivity,
+    });
+  } catch (err) {
+    console.error("❌ Dashboard fetch error:", err);
+    res.status(500).json({ message: "Failed to load dashboard" });
+  }
 };

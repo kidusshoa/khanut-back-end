@@ -13,7 +13,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
   const link = `${BASE_URL}/api/auth/verify-email?token=${token}`;
 
   await resend.emails.send({
-    from: "khanut@business.online",
+    from: "team@mail.khanut.online",
     to: email,
     subject: "Verify your email",
     html: `<p>Click to verify your email: <a href="${link}">${link}</a></p>`,

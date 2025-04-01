@@ -5,9 +5,7 @@ import {
   refresh,
   register,
   request2FA,
-  requestVerification,
   verify2FA,
-  verifyEmail,
 } from "../controllers/authController";
 
 const router = Router();
@@ -103,57 +101,6 @@ router.post("/register", register as (req: Request, res: Response) => void);
  *         description: Invalid or blacklisted token
  */
 router.post("/refresh", refresh as (req: Request, res: Response) => void);
-/**
- * @swagger
- * /api/auth/request-verification:
- *   post:
- *     summary: Request a new verification email
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *             properties:
- *               email:
- *                 type: string
- *     responses:
- *       200:
- *         description: Verification email sent
- *       404:
- *         description: User not found
- */
-router.post(
-  "/request-verification",
-  requestVerification as (req: Request, res: Response) => void
-);
-
-/**
- * @swagger
- * /api/auth/verify-email:
- *   get:
- *     summary: Verify user's email with token
- *     tags: [Auth]
- *     parameters:
- *       - in: query
- *         name: token
- *         schema:
- *           type: string
- *         required: true
- *         description: Verification token from email
- *     responses:
- *       200:
- *         description: Email verified successfully
- *       400:
- *         description: Invalid or expired token
- */
-router.get(
-  "/verify-email",
-  verifyEmail as (req: Request, res: Response) => void
-);
 
 /**
  * @swagger

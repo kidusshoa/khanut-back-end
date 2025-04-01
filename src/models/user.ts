@@ -7,8 +7,6 @@ export interface IUser extends Document {
   password: string;
   role: "admin" | "business" | "customer";
   notify: boolean;
-  verified: boolean;
-  verificationToken?: string;
   twoFactorCode?: string;
   twoFactorCodeExpiry?: Date;
   comparePassword(candidate: string): Promise<boolean>;
@@ -25,8 +23,6 @@ const UserSchema: Schema = new Schema(
       default: "customer",
     },
     notify: { type: Boolean, default: false },
-    verified: { type: Boolean, default: false },
-    verificationToken: String,
     twoFactorCode: String,
     twoFactorCodeExpiry: Date,
   },
@@ -41,7 +37,7 @@ UserSchema.pre("save", async function (this: IUser, next) {
   next();
 });
 
-// ✅ Compare passwords
+// Compare passwords
 UserSchema.methods.comparePassword = function (candidate: string) {
   return bcrypt.compare(candidate, this.password);
 };

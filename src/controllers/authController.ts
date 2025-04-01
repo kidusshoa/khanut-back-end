@@ -1,10 +1,8 @@
 import { Request, Response } from "express";
-import crypto from "crypto";
 import jwt from "jsonwebtoken";
 
 import { User } from "../models/user";
 import { TokenBlacklist } from "../models/tokebBlacklist";
-import { sendVerificationEmail } from "../utils/sendVerificationEmail";
 import { send2FACode } from "../utils/send2FACode";
 
 export const refresh = async (req: Request, res: Response) => {
@@ -31,38 +29,38 @@ export const refresh = async (req: Request, res: Response) => {
   }
 };
 
-export const requestVerification = async (
-  req: Request<{}, {}, { email: string }>,
-  res: Response
-) => {
-  const { email } = req.body;
+// export const requestVerification = async (
+//   req: Request<{}, {}, { email: string }>,
+//   res: Response
+// ) => {
+//   const { email } = req.body;
 
-  const user = await User.findOne({ email });
-  if (!user) return res.status(404).json({ message: "User not found" });
+//   const user = await User.findOne({ email });
+//   if (!user) return res.status(404).json({ message: "User not found" });
 
-  const token = crypto.randomBytes(32).toString("hex");
-  user.verificationToken = token;
-  await user.save();
+//   const token = crypto.randomBytes(32).toString("hex");
+//   user.verificationToken = token;
+//   await user.save();
 
-  await sendVerificationEmail(email, token);
-  return res.json({ message: "Verification email sent" });
-};
+//   await sendVerificationEmail(email, token);
+//   return res.json({ message: "Verification email sent" });
+// };
 
-export const verifyEmail = async (req: Request, res: Response) => {
-  const token = req.query.token as string;
+// export const verifyEmail = async (req: Request, res: Response) => {
+//   const token = req.query.token as string;
 
-  if (!token) return res.status(400).json({ message: "Token missing" });
+//   if (!token) return res.status(400).json({ message: "Token missing" });
 
-  const user = await User.findOne({ verificationToken: token });
-  if (!user)
-    return res.status(400).json({ message: "Invalid or expired token" });
+//   const user = await User.findOne({ verificationToken: token });
+//   if (!user)
+//     return res.status(400).json({ message: "Invalid or expired token" });
 
-  user.verified = true;
-  user.verificationToken = undefined;
-  await user.save();
+//   user.verified = true;
+//   user.verificationToken = undefined;
+//   await user.save();
 
-  return res.json({ message: "Email verified successfully" });
-};
+//   return res.json({ message: "Email verified successfully" });
+// };
 
 export const login = async (req: Request, res: Response): Promise<Response> => {
   const { email, password } = req.body;
@@ -72,8 +70,10 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
     return res.status(401).json({ message: "Invalid credentials" });
   }
 
-  if (!user.verified) {
-    return res.status(403).json({ message: "Email not verified" });
+  if (user.twoFactorCode || user.twoFactorCodeExpiry) {
+    return res.status(403).json({
+      message: "2FA verification required before login",
+    });
   }
 
   const payload = { id: user._id, role: user.role };
@@ -142,33 +142,28 @@ export const register = async (req: Request, res: Response) => {
     const { email, name, password, role } = req.body;
 
     const exists = await User.findOne({ email });
-    if (exists)
+    if (exists) {
       return res.status(400).json({ message: "Email already in use" });
+    }
 
     if (!["admin", "business", "customer"].includes(role)) {
       return res.status(400).json({ message: "Invalid role" });
     }
 
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-
-    const newUser = new User({
-      email,
-      name,
-      password,
-      role,
-      verificationToken,
-      verified: false,
-    });
+    const newUser = new User({ email, name, password, role });
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    newUser.twoFactorCode = code;
+    newUser.twoFactorCodeExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
     await newUser.save();
 
-    await sendVerificationEmail(email, verificationToken);
+    await send2FACode(email, code);
 
     return res.status(201).json({
-      message: "Account created. Please check your email to verify.",
+      message: "Account created. Check your email for 2FA code.",
     });
-  } catch (err: any) {
-    console.error("❌ Registration error:", err);
+  } catch (err) {
+    console.error("Registration error:", err);
     return res.status(500).json({ message: "Server error" });
   }
 };

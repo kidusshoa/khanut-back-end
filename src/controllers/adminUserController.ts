@@ -10,11 +10,29 @@ interface AuthRequest extends Request {
 
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
-    const users = await User.find({ role: { $in: ["customer", "business"] } })
-      .select("-password -twoFactorCode -twoFactorCodeExpiry")
-      .sort({ createdAt: -1 });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
 
-    res.json(users);
+    const [users, total] = await Promise.all([
+      User.find({ role: { $in: ["customer", "business"] } })
+        .select("-password -twoFactorCode -twoFactorCodeExpiry")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      User.countDocuments({ role: { $in: ["customer", "business"] } }),
+    ]);
+
+    res.json({
+      users,
+      pagination: {
+        totalItems: total,
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page < Math.ceil(total / limit),
+        hasPrevPage: page > 1,
+      },
+    });
   } catch (err) {
     console.error("❌ Fetch users error:", err);
     res.status(500).json({ message: "Failed to fetch users" });

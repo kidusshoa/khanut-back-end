@@ -4,6 +4,8 @@ import adminRoutes from "./routes/admin";
 import authRoutes from "./routes/auth";
 import adminBusinessRoutes from "./routes/adminBusiness";
 import adminUserRoutes from "./routes/adminUser";
+import adminReviewRoutes from "./routes/adminReview";
+import adminReportRoutes from "./routes/adminReport";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 
@@ -16,5 +18,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/admin/businesses", adminBusinessRoutes);
 app.use("/api/admin/users", adminUserRoutes);
+app.use("/api/admin/reviews", adminReviewRoutes);
+app.use("/api/admin/reports", adminReportRoutes);
 
 export default app;

@@ -4,10 +4,28 @@ import { Business } from "../models/business";
 
 export const getPendingBusinesses = async (req: Request, res: Response) => {
   try {
-    const businesses = await Business.find({ approved: false }).sort({
-      createdAt: -1,
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const [businesses, total] = await Promise.all([
+      Business.find({ approved: false })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Business.countDocuments({ approved: false }),
+    ]);
+
+    res.json({
+      businesses,
+      pagination: {
+        totalItems: total,
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page < Math.ceil(total / limit),
+        hasPrevPage: page > 1,
+      },
     });
-    res.json(businesses);
   } catch (err) {
     console.error("❌ Fetch pending businesses:", err);
     res.status(500).json({ message: "Failed to fetch pending approvals" });
@@ -38,12 +56,30 @@ export const approveBusiness = async (req: Request, res: Response) => {
 
 export const getApprovedBusinesses = async (req: Request, res: Response) => {
   try {
-    const businesses = await Business.find({ approved: true }).sort({
-      createdAt: -1,
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const [businesses, total] = await Promise.all([
+      Business.find({ approved: false })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Business.countDocuments({ approved: false }),
+    ]);
+
+    res.json({
+      businesses,
+      pagination: {
+        totalItems: total,
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page < Math.ceil(total / limit),
+        hasPrevPage: page > 1,
+      },
     });
-    res.json(businesses);
   } catch (err) {
-    console.error("❌ Fetch approved businesses:", err);
-    res.status(500).json({ message: "Failed to fetch businesses" });
+    console.error("❌ Fetch pending businesses:", err);
+    res.status(500).json({ message: "Failed to fetch pending approvals" });
   }
 };

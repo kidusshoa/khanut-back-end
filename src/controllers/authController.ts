@@ -19,7 +19,7 @@ export const refresh = async (req: Request, res: Response) => {
     const { id, role } = payload;
 
     const newAccess = jwt.sign({ id, role }, process.env.JWT_SECRET!, {
-      expiresIn: "15m",
+      expiresIn: "10h",
     });
 
     return res.json({ accessToken: newAccess });

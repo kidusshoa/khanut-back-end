@@ -6,7 +6,6 @@ import {
 } from "../controllers/adminReportController";
 
 const router = express.Router();
-
 /**
  * @swagger
  * /api/admin/reports:
@@ -18,6 +17,39 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: Dashboard-level stats
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 totalUsers:
+ *                   type: integer
+ *                 totalBusinesses:
+ *                   type: integer
+ *                 totalReviews:
+ *                   type: integer
+ *                 pendingApprovals:
+ *                   type: integer
+ *                 pendingReviews:
+ *                   type: integer
+ *                 monthlyUsers:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       month:
+ *                         type: string
+ *                       count:
+ *                         type: integer
+ *                 monthlyBusinesses:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       month:
+ *                         type: string
+ *                       count:
+ *                         type: integer
  */
 router.get("/", isAdmin, getAdminReports);
 

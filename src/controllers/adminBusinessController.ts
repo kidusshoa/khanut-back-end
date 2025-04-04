@@ -61,11 +61,11 @@ export const getApprovedBusinesses = async (req: Request, res: Response) => {
     const skip = (page - 1) * limit;
 
     const [businesses, total] = await Promise.all([
-      Business.find({ approved: false })
+      Business.find({ approved: true })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
-      Business.countDocuments({ approved: false }),
+      Business.countDocuments({ approved: true }),
     ]);
 
     res.json({

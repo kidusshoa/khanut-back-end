@@ -9,6 +9,7 @@ export interface IUser extends Document {
   notify: boolean;
   twoFactorCode?: string;
   twoFactorCodeExpiry?: Date;
+  favorites: mongoose.Types.ObjectId[];
   comparePassword(candidate: string): Promise<boolean>;
 }
 
@@ -25,6 +26,7 @@ const UserSchema: Schema = new Schema(
     notify: { type: Boolean, default: false },
     twoFactorCode: String,
     twoFactorCodeExpiry: Date,
+    favorites: [{ type: Schema.Types.ObjectId, ref: "Business" }],
   },
   { timestamps: true }
 );

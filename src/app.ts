@@ -13,6 +13,7 @@ import searchRoutes from "./routes/search";
 import customerProfileRoutes from "./routes/customerProfile";
 import favoriteRoutes from "./routes/favorites";
 import customerTransactionRoutes from "./routes/customerTransaction";
+import notificationRoutes from "./routes/notification";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 
@@ -37,5 +38,6 @@ app.use(
 app.use("/api/businesses", businessRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/customer/favorites", favoriteRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 export default app;

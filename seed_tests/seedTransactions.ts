@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Transaction } from "./src/models/transaction";
+import { Transaction } from "../src/models/transaction";
 import dotenv from "dotenv";
 
 dotenv.config();

@@ -9,6 +9,7 @@ import adminReportRoutes from "./routes/adminReport";
 import adminSettingRoutes from "./routes/adminSetting";
 import customerHomeRoutes from "./routes/customerHome";
 import businessRoutes from "./routes/business";
+import searchRoutes from "./routes/search";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 
@@ -26,5 +27,6 @@ app.use("/api/admin/reports", adminReportRoutes);
 app.use("/api/admin/settings", adminSettingRoutes);
 app.use("/api/customer", customerHomeRoutes);
 app.use("/api/businesses", businessRoutes);
+app.use("/api/search", searchRoutes);
 
 export default app;

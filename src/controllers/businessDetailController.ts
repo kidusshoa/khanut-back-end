@@ -1,5 +1,3 @@
-import { HydratedDocument, Types } from "mongoose";
-import { IUser } from "../models/user"; // if you have a user interface
 import { Service } from "../models/service";
 import { Business } from "../models/business";
 import { Review } from "../models/review";

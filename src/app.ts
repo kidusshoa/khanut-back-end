@@ -12,6 +12,7 @@ import businessRoutes from "./routes/business";
 import searchRoutes from "./routes/search";
 import customerProfileRoutes from "./routes/customerProfile";
 import favoriteRoutes from "./routes/favorites";
+import customerTransactionRoutes from "./routes/customerTransaction";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 
@@ -27,10 +28,14 @@ app.use("/api/admin/users", adminUserRoutes);
 app.use("/api/admin/reviews", adminReviewRoutes);
 app.use("/api/admin/reports", adminReportRoutes);
 app.use("/api/admin/settings", adminSettingRoutes);
-app.use("/api/customer", customerHomeRoutes, customerProfileRoutes);
+app.use(
+  "/api/customer",
+  customerHomeRoutes,
+  customerProfileRoutes,
+  customerTransactionRoutes
+);
 app.use("/api/businesses", businessRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/customer/favorites", favoriteRoutes);
-// app.use("/api/customer",  customerProfileRoutes);
 
 export default app;

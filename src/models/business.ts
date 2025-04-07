@@ -11,9 +11,10 @@ export interface IBusiness extends Document {
     coordinates: [number, number];
   };
   ownerId: Types.ObjectId;
-  services: mongoose.Types.ObjectId[]; // update this if you have a Service model
-  reviews: mongoose.Types.ObjectId[]; // same for reviews
+  services: mongoose.Types.ObjectId[];
+  reviews: mongoose.Types.ObjectId[];
   approved: boolean;
+  profilePicture?: string;
 }
 
 const BusinessSchema: Schema = new Schema(
@@ -30,8 +31,9 @@ const BusinessSchema: Schema = new Schema(
       type: { type: String, enum: ["Point"], default: "Point" },
       coordinates: { type: [Number], default: [0, 0] },
     },
-    services: [{ type: Schema.Types.ObjectId, ref: "Service" }], // ✅ add this
-    reviews: [{ type: Schema.Types.ObjectId, ref: "Review" }], // ✅ add this
+    services: [{ type: Schema.Types.ObjectId, ref: "Service" }],
+    reviews: [{ type: Schema.Types.ObjectId, ref: "Review" }],
+    profilePicture: String,
   },
   { timestamps: true }
 );

@@ -7,6 +7,7 @@ export interface IUser extends Document {
   password: string;
   role: "admin" | "business" | "customer";
   notify: boolean;
+  profilePicture?: string;
   twoFactorCode?: string;
   twoFactorCodeExpiry?: Date;
   favorites: mongoose.Types.ObjectId[];
@@ -24,6 +25,7 @@ const UserSchema: Schema = new Schema(
       default: "customer",
     },
     notify: { type: Boolean, default: false },
+    profilePicture: String,
     twoFactorCode: String,
     twoFactorCodeExpiry: Date,
     favorites: [{ type: Schema.Types.ObjectId, ref: "Business" }],

@@ -1,4 +1,3 @@
-// models/service.ts
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IService extends Document {
@@ -6,6 +5,7 @@ export interface IService extends Document {
   description?: string;
   price?: number;
   businessId: mongoose.Types.ObjectId;
+  images?: string[];
 }
 
 const ServiceSchema: Schema = new Schema(
@@ -18,6 +18,7 @@ const ServiceSchema: Schema = new Schema(
       ref: "Business",
       required: true,
     },
+    images: { type: [String], default: [] },
   },
   { timestamps: true }
 );

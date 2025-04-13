@@ -14,6 +14,8 @@ import customerProfileRoutes from "./routes/customerProfile";
 import favoriteRoutes from "./routes/favorites";
 import customerTransactionRoutes from "./routes/customerTransaction";
 import notificationRoutes from "./routes/notification";
+import uploadRoutes from "./routes/upload";
+
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 
@@ -39,5 +41,6 @@ app.use("/api/businesses", businessRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/customer/favorites", favoriteRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/upload", uploadRoutes);
 
 export default app;

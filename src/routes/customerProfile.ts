@@ -2,8 +2,10 @@ import express from "express";
 import {
   getCustomerProfile,
   updateCustomerProfile,
+  updateProfilePicture,
 } from "../controllers/customerProfileController";
 import { isCustomer } from "../middleware/isCustomer";
+import { upload } from "../utils/multer";
 
 const router = express.Router();
 
@@ -50,6 +52,31 @@ router.get("/profile", isCustomer, (req, res) =>
  */
 router.patch("/profile", isCustomer, (req, res) =>
   updateCustomerProfile(req as any, res)
+);
+
+/**
+ * @swagger
+ * /api/customer/profile/picture:
+ *   patch:
+ *     summary: Update customer profile picture
+ *     tags: [Customer]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ */
+router.patch(
+  "/profile/picture",
+  isCustomer,
+  upload.single("image"),
+  (req, res) => updateProfilePicture(req as any, res)
 );
 
 export default router;

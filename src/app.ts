@@ -23,23 +23,31 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Swagger documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Admin routes
 app.use("/api/admin", adminRoutes);
-app.use("/api/auth", authRoutes);
 app.use("/api/admin/businesses", adminBusinessRoutes);
 app.use("/api/admin/users", adminUserRoutes);
 app.use("/api/admin/reviews", adminReviewRoutes);
 app.use("/api/admin/reports", adminReportRoutes);
 app.use("/api/admin/settings", adminSettingRoutes);
-app.use(
-  "/api/customer",
-  customerHomeRoutes,
-  customerProfileRoutes,
-  customerTransactionRoutes
-);
+
+// Auth routes
+app.use("/api/auth", authRoutes);
+
+// Business routes
 app.use("/api/businesses", businessRoutes);
-app.use("/api/search", searchRoutes);
+
+// Customer routes
+app.use("/api/customer", customerHomeRoutes);
+app.use("/api/customer", customerProfileRoutes);
+app.use("/api/customer", customerTransactionRoutes);
 app.use("/api/customer/favorites", favoriteRoutes);
+
+// Other routes
+app.use("/api/search", searchRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/upload", uploadRoutes);
 

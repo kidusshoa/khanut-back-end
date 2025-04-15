@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Business } from "../models/business";
 import { Service } from "../models/service";
 import { Types } from "mongoose";
+import { ActivityLog } from "../models/activityLog";
 
 interface AuthRequest extends Request {
   user: {
@@ -12,14 +13,35 @@ interface AuthRequest extends Request {
 
 export const registerBusiness = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, description, category, city, latitude, longitude } = req.body;
+    const {
+      name,
+      description,
+      category,
+      city,
+      latitude,
+      longitude,
+      email,
+      phone,
+    } = req.body;
+
+    // Validate required fields
+    if (
+      !name ||
+      !description ||
+      !category ||
+      !city ||
+      !latitude ||
+      !longitude
+    ) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
 
     // Check if user already has a business
     const existingBusiness = await Business.findOne({ ownerId: req.user.id });
     if (existingBusiness) {
-      return res
-        .status(400)
-        .json({ message: "You already have a registered business" });
+      return res.status(400).json({
+        message: "You already have a registered business",
+      });
     }
 
     const business = new Business({
@@ -27,6 +49,8 @@ export const registerBusiness = async (req: AuthRequest, res: Response) => {
       description,
       category,
       city,
+      email,
+      phone,
       ownerId: req.user.id,
       location: {
         type: "Point",
@@ -36,6 +60,13 @@ export const registerBusiness = async (req: AuthRequest, res: Response) => {
     });
 
     await business.save();
+
+    // Create activity log
+    await ActivityLog.create({
+      action: "BUSINESS_REGISTRATION",
+      userId: req.user.id,
+      details: `New business "${name}" registered`,
+    });
 
     return res.status(201).json({
       message: "Business registered successfully. Pending approval.",

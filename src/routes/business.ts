@@ -11,7 +11,6 @@ import { RequestHandler } from "express";
 
 const router = express.Router();
 
-// Type assertion for request handlers
 const typedHandler = (
   fn: (req: AuthRequest, res: Response) => Promise<Response>
 ) => {

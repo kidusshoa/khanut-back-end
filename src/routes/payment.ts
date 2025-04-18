@@ -1,13 +1,13 @@
 import { Router } from "express";
-import { 
+import {
   initializeOrderPayment,
   initializeAppointmentPayment,
   verifyPayment,
   chapaWebhook,
   getCustomerPayments,
-  getBusinessPayments
+  getBusinessPayments,
 } from "../controllers/paymentController";
-import { auth } from "../middleware/auth";
+import { protect } from "../middleware/auth";
 import { isBusiness } from "../middleware/isBusiness";
 import { isCustomer } from "../middleware/isCustomer";
 
@@ -15,17 +15,17 @@ const router = Router();
 
 // Initialize payment for an order
 router.post(
-  "/order/:orderId/initialize", 
-  auth, 
-  isCustomer, 
+  "/order/:orderId/initialize",
+  protect(["customer"]),
+  isCustomer,
   initializeOrderPayment
 );
 
 // Initialize payment for an appointment
 router.post(
-  "/appointment/:appointmentId/initialize", 
-  auth, 
-  isCustomer, 
+  "/appointment/:appointmentId/initialize",
+  protect(["customer"]),
+  isCustomer,
   initializeAppointmentPayment
 );
 
@@ -37,17 +37,17 @@ router.post("/webhook", chapaWebhook);
 
 // Get payment history for a customer
 router.get(
-  "/customer/:customerId", 
-  auth, 
-  isCustomer, 
+  "/customer/:customerId",
+  protect(["customer"]),
+  isCustomer,
   getCustomerPayments
 );
 
 // Get payment history for a business
 router.get(
-  "/business/:businessId", 
-  auth, 
-  isBusiness, 
+  "/business/:businessId",
+  protect(["business"]),
+  isBusiness,
   getBusinessPayments
 );
 

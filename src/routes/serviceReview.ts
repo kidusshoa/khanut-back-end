@@ -1,14 +1,14 @@
 import { Router } from "express";
-import { 
+import {
   getServiceReviews,
   getBusinessReviews,
   getCustomerReviews,
   createReview,
   updateReview,
   deleteReview,
-  getServiceRatingStats
+  getServiceRatingStats,
 } from "../controllers/serviceReviewController";
-import { auth } from "../middleware/auth";
+import { protect } from "../middleware/auth";
 import { isCustomer } from "../middleware/isCustomer";
 
 const router = Router();
@@ -26,12 +26,12 @@ router.get("/customer/:customerId", getCustomerReviews);
 router.get("/stats/service/:serviceId", getServiceRatingStats);
 
 // Create a new review (customer only)
-router.post("/", auth, isCustomer, createReview);
+router.post("/", protect(["customer"]), isCustomer, createReview);
 
 // Update a review (owner only)
-router.put("/:reviewId", auth, updateReview);
+router.put("/:reviewId", protect([]), updateReview);
 
 // Delete a review (owner or admin only)
-router.delete("/:reviewId", auth, deleteReview);
+router.delete("/:reviewId", protect([]), deleteReview);
 
 export default router;

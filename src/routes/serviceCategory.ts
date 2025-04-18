@@ -1,13 +1,13 @@
 import { Router } from "express";
-import { 
+import {
   getAllCategories,
   getCategoryById,
   createCategory,
   updateCategory,
   deleteCategory,
-  getServicesByCategory
+  getServicesByCategory,
 } from "../controllers/serviceCategoryController";
-import { auth } from "../middleware/auth";
+import { protect } from "../middleware/auth";
 import { isAdmin } from "../middleware/isAdmin";
 
 const router = Router();
@@ -22,12 +22,12 @@ router.get("/:categoryId", getCategoryById);
 router.get("/:categoryId/services", getServicesByCategory);
 
 // Create a new category (admin only)
-router.post("/", auth, isAdmin, createCategory);
+router.post("/", protect(["admin"]), isAdmin, createCategory);
 
 // Update a category (admin only)
-router.put("/:categoryId", auth, isAdmin, updateCategory);
+router.put("/:categoryId", protect(["admin"]), isAdmin, updateCategory);
 
 // Delete a category (admin only)
-router.delete("/:categoryId", auth, isAdmin, deleteCategory);
+router.delete("/:categoryId", protect(["admin"]), isAdmin, deleteCategory);
 
 export default router;

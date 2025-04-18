@@ -16,6 +16,14 @@ import customerTransactionRoutes from "./routes/customerTransaction";
 import notificationRoutes from "./routes/notification";
 import uploadRoutes from "./routes/upload";
 
+// New service type routes
+import serviceRoutes from "./routes/service";
+import appointmentRoutes from "./routes/appointment";
+import orderRoutes from "./routes/order";
+import paymentRoutes from "./routes/payment";
+import serviceReviewRoutes from "./routes/serviceReview";
+import serviceCategoryRoutes from "./routes/serviceCategory";
+
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 
@@ -50,5 +58,13 @@ app.use("/api/customer/favorites", favoriteRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/upload", uploadRoutes);
+
+// Service type routes
+app.use("/api/services", serviceRoutes);
+app.use("/api/appointments", appointmentRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/reviews", serviceReviewRoutes);
+app.use("/api/categories", serviceCategoryRoutes);
 
 export default app;

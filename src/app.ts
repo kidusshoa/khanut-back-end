@@ -50,8 +50,8 @@ app.use("/api/auth", authRoutes);
 
 // Business routes
 app.use("/api/businesses", businessRoutes);
+app.use("/api/businesses", locationRoutes); // Put location routes before detail routes
 app.use("/api/businesses", businessDetailRoutes);
-app.use("/api/businesses", locationRoutes);
 
 // Customer routes
 app.use("/api/customer", customerHomeRoutes);

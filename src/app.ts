@@ -9,6 +9,7 @@ import adminReportRoutes from "./routes/adminReport";
 import adminSettingRoutes from "./routes/adminSetting";
 import customerHomeRoutes from "./routes/customerHome";
 import businessRoutes from "./routes/business";
+import businessDetailRoutes from "./routes/businessDetail";
 import searchRoutes from "./routes/search";
 import customerProfileRoutes from "./routes/customerProfile";
 import favoriteRoutes from "./routes/favorites";
@@ -22,6 +23,7 @@ import appointmentRoutes from "./routes/appointment";
 import orderRoutes from "./routes/order";
 import paymentRoutes from "./routes/payment";
 import serviceReviewRoutes from "./routes/serviceReview";
+import reviewRoutes from "./routes/reviews";
 import serviceCategoryRoutes from "./routes/serviceCategory";
 
 import swaggerUi from "swagger-ui-express";
@@ -47,6 +49,7 @@ app.use("/api/auth", authRoutes);
 
 // Business routes
 app.use("/api/businesses", businessRoutes);
+app.use("/api/businesses", businessDetailRoutes);
 
 // Customer routes
 app.use("/api/customer", customerHomeRoutes);
@@ -64,7 +67,8 @@ app.use("/api/services", serviceRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
-app.use("/api/reviews", serviceReviewRoutes);
+app.use("/api/service-reviews", serviceReviewRoutes);
+app.use("/api/reviews", reviewRoutes);
 app.use("/api/categories", serviceCategoryRoutes);
 
 export default app;

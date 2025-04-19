@@ -38,4 +38,7 @@ const BusinessSchema: Schema = new Schema(
   { timestamps: true }
 );
 
+// Create a 2dsphere index for geospatial queries
+BusinessSchema.index({ location: "2dsphere" });
+
 export const Business = mongoose.model<IBusiness>("Business", BusinessSchema);

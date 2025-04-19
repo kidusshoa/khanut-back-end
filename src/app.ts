@@ -16,6 +16,7 @@ import favoriteRoutes from "./routes/favorites";
 import customerTransactionRoutes from "./routes/customerTransaction";
 import notificationRoutes from "./routes/notification";
 import uploadRoutes from "./routes/upload";
+import locationRoutes from "./routes/location";
 
 // New service type routes
 import serviceRoutes from "./routes/service";
@@ -50,6 +51,7 @@ app.use("/api/auth", authRoutes);
 // Business routes
 app.use("/api/businesses", businessRoutes);
 app.use("/api/businesses", businessDetailRoutes);
+app.use("/api/businesses", locationRoutes);
 
 // Customer routes
 app.use("/api/customer", customerHomeRoutes);

@@ -181,4 +181,15 @@ router.post(
  */
 router.post("/verify-2fa", verify2FA as (req: Request, res: Response) => void);
 
+/**
+ * Test endpoint for CORS
+ */
+router.get("/test-cors", (req: Request, res: Response) => {
+  res.json({
+    message: "CORS is working correctly!",
+    timestamp: new Date().toISOString(),
+    headers: req.headers,
+  });
+});
+
 export default router;

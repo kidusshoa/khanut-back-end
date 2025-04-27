@@ -1,5 +1,5 @@
 import express from "express";
-import cors from "cors";
+import { corsMiddleware } from "./config/cors";
 import adminRoutes from "./routes/admin";
 import authRoutes from "./routes/auth";
 import adminBusinessRoutes from "./routes/adminBusiness";
@@ -31,8 +31,11 @@ import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 
 const app = express();
-app.use(cors());
+app.use(corsMiddleware);
 app.use(express.json());
+
+// Enable preflight requests for all routes
+app.options("*", corsMiddleware);
 
 // Swagger documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

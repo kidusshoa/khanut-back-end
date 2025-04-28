@@ -41,6 +41,7 @@ export const approveBusiness = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Business not found" });
 
     business.approved = true;
+    business.status = "approved";
     await business.save();
 
     await ActivityLog.create({
@@ -81,5 +82,29 @@ export const getApprovedBusinesses = async (req: Request, res: Response) => {
   } catch (err) {
     console.error("❌ Fetch pending businesses:", err);
     res.status(500).json({ message: "Failed to fetch pending approvals" });
+  }
+};
+
+export const rejectBusiness = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const business = await Business.findById(id);
+    if (!business)
+      return res.status(404).json({ message: "Business not found" });
+
+    // Mark as rejected (we keep it in the database but with rejected status)
+    business.approved = false;
+    business.status = "rejected";
+    await business.save();
+
+    await ActivityLog.create({
+      message: `Business "${business.name}" rejected`,
+    });
+
+    res.json({ message: "Business rejected" });
+  } catch (err) {
+    console.error("❌ Reject business error:", err);
+    res.status(500).json({ message: "Failed to reject business" });
   }
 };

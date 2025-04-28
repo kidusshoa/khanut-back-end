@@ -4,6 +4,7 @@ import {
   getPendingBusinesses,
   approveBusiness,
   getApprovedBusinesses,
+  rejectBusiness,
 } from "../controllers/adminBusinessController";
 
 const router = Router();
@@ -79,6 +80,35 @@ router.get(
   "/list",
   isAdmin,
   getApprovedBusinesses as (req: Request, res: Response) => void
+);
+
+/**
+ * @swagger
+ * /api/admin/businesses/{id}/reject:
+ *   patch:
+ *     summary: Reject a business by ID
+ *     tags: [Admin - Businesses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Business ID to reject
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Business rejected successfully
+ *       404:
+ *         description: Business not found
+ *       500:
+ *         description: Server error
+ */
+router.patch(
+  "/:id/reject",
+  isAdmin,
+  rejectBusiness as (req: Request, res: Response) => void
 );
 
 export default router;

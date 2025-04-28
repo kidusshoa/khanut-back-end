@@ -14,6 +14,7 @@ export interface IBusiness extends Document {
   services: mongoose.Types.ObjectId[];
   reviews: mongoose.Types.ObjectId[];
   approved: boolean;
+  status: "pending" | "approved" | "rejected";
   profilePicture?: string;
 }
 
@@ -25,6 +26,11 @@ const BusinessSchema: Schema = new Schema(
     description: { type: String },
     ownerId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     approved: { type: Boolean, default: false },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
     category: { type: String },
     city: { type: String },
     location: {

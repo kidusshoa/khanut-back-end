@@ -29,6 +29,10 @@ import serviceReviewRoutes from "./routes/serviceReview";
 import reviewRoutes from "./routes/reviews";
 import serviceCategoryRoutes from "./routes/serviceCategory";
 
+// Staff management routes
+import staffRoutes from "./routes/staff";
+import recurringAppointmentRoutes from "./routes/recurringAppointment";
+
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 
@@ -78,5 +82,9 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/service-reviews", serviceReviewRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/categories", serviceCategoryRoutes);
+
+// Staff management routes
+app.use("/api/staff", staffRoutes);
+app.use("/api/recurring-appointments", recurringAppointmentRoutes);
 
 export default app;

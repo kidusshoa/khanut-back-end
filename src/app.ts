@@ -8,6 +8,7 @@ import adminUserRoutes from "./routes/adminUser";
 import adminReviewRoutes from "./routes/adminReview";
 import adminReportRoutes from "./routes/adminReport";
 import adminSettingRoutes from "./routes/adminSetting";
+import adminRecommendationRoutes from "./routes/adminRecommendation";
 import customerHomeRoutes from "./routes/customerHome";
 import businessRoutes from "./routes/business";
 import businessDetailRoutes from "./routes/businessDetail";
@@ -53,6 +54,7 @@ app.use("/api/admin/users", adminUserRoutes);
 app.use("/api/admin/reviews", adminReviewRoutes);
 app.use("/api/admin/reports", adminReportRoutes);
 app.use("/api/admin/settings", adminSettingRoutes);
+app.use("/api/admin/recommendations", adminRecommendationRoutes);
 
 // Auth routes
 app.use("/api/auth", authRoutes);

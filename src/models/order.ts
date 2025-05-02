@@ -1,18 +1,25 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-export type OrderStatus = 
-  | "pending_payment" 
-  | "payment_received" 
-  | "processing" 
-  | "shipped" 
-  | "delivered" 
-  | "cancelled" 
+export type OrderStatus =
+  | "pending_payment"
+  | "payment_received"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "cancelled"
   | "refunded";
 
 export interface OrderItem {
   serviceId: mongoose.Types.ObjectId;
   quantity: number;
   price: number;
+}
+
+export interface PaymentDetails {
+  transactionRef?: string;
+  paymentMethod: string;
+  paymentStatus: "pending" | "completed" | "failed" | "cancelled";
+  paymentDate?: Date;
 }
 
 export interface IOrder extends Document {
@@ -23,6 +30,7 @@ export interface IOrder extends Document {
   status: OrderStatus;
   paymentId?: string;
   paymentMethod: string;
+  paymentDetails?: PaymentDetails;
   shippingAddress?: {
     street: string;
     city: string;
@@ -89,6 +97,16 @@ const OrderSchema: Schema = new Schema(
     paymentMethod: {
       type: String,
       required: true,
+    },
+    paymentDetails: {
+      transactionRef: { type: String },
+      paymentMethod: { type: String },
+      paymentStatus: {
+        type: String,
+        enum: ["pending", "completed", "failed", "cancelled"],
+        default: "pending",
+      },
+      paymentDate: { type: Date },
     },
     shippingAddress: {
       street: { type: String },

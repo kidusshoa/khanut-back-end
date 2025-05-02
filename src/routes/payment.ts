@@ -2,8 +2,10 @@ import { Router } from "express";
 import {
   initializeOrderPayment,
   initializeAppointmentPayment,
-  verifyPayment,
+  verifyPaymentStatus,
   chapaWebhook,
+  handlePaymentCallback,
+  getOrderPaymentStatus,
   getCustomerPayments,
   getBusinessPayments,
 } from "../controllers/paymentController";
@@ -113,13 +115,13 @@ router.post(
 
 /**
  * @swagger
- * /api/payments/verify/{txRef}:
+ * /api/payments/verify/{transactionRef}:
  *   get:
  *     summary: Verify payment status
  *     tags: [Payments]
  *     parameters:
  *       - in: path
- *         name: txRef
+ *         name: transactionRef
  *         required: true
  *         schema:
  *           type: string
@@ -132,24 +134,96 @@ router.post(
  *             schema:
  *               type: object
  *               properties:
- *                 verified:
+ *                 success:
  *                   type: boolean
- *                 status:
+ *                 message:
  *                   type: string
- *                   enum: [pending, completed, failed]
- *                 paymentId:
- *                   type: string
- *                 referenceType:
- *                   type: string
- *                   enum: [order, appointment]
- *                 referenceId:
- *                   type: string
+ *                 payment:
+ *                   type: object
+ *                 paymentDetails:
+ *                   type: object
  *       404:
  *         description: Transaction not found
  *       500:
  *         description: Verification failed
  */
-router.get("/verify/:txRef", verifyPayment);
+router.get("/verify/:transactionRef", verifyPaymentStatus);
+
+/**
+ * @swagger
+ * /api/payments/callback:
+ *   get:
+ *     summary: Handle payment callback from Chapa
+ *     tags: [Payments]
+ *     parameters:
+ *       - in: query
+ *         name: tx_ref
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Transaction reference
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Payment status
+ *     responses:
+ *       302:
+ *         description: Redirects to the appropriate page based on payment status
+ *       400:
+ *         description: Missing transaction reference
+ *       500:
+ *         description: Callback processing failed
+ */
+router.get("/callback", handlePaymentCallback);
+
+/**
+ * @swagger
+ * /api/payments/order/{orderId}/status:
+ *   get:
+ *     summary: Get payment status for an order
+ *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Order ID
+ *     responses:
+ *       200:
+ *         description: Payment status for the order
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 paymentStatus:
+ *                   type: string
+ *                   enum: [not_initiated, pending, completed, failed, cancelled]
+ *                 orderStatus:
+ *                   type: string
+ *                 transactionRef:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (not the customer who placed the order)
+ *       404:
+ *         description: Order not found
+ *       500:
+ *         description: Server error
+ */
+router.get(
+  "/order/:orderId/status",
+  protect(["customer"]),
+  isCustomer,
+  getOrderPaymentStatus
+);
 
 /**
  * @swagger

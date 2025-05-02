@@ -138,3 +138,80 @@ export const addBusinessService = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ message: "Failed to add service" });
   }
 };
+
+export const updateBusinessProfile = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    const {
+      name,
+      description,
+      category,
+      city,
+      email,
+      phone,
+      website,
+      openingHours,
+      socialMedia,
+      latitude,
+      longitude,
+      address,
+      businessType,
+    } = req.body;
+
+    // Find the business by owner ID
+    const business = await Business.findOne({ ownerId: req.user.id });
+    if (!business) {
+      return res.status(404).json({ message: "Business not found" });
+    }
+
+    // Update business fields if provided
+    if (name) business.name = name;
+    if (description) business.description = description;
+    if (category) business.category = category;
+    if (city) business.city = city;
+    if (email) business.email = email;
+    if (phone) business.phone = phone;
+    if (website) business.website = website;
+    if (businessType) business.businessType = businessType;
+    if (address) business.address = address;
+
+    // Update location if both latitude and longitude are provided
+    if (latitude && longitude) {
+      business.location = {
+        type: "Point",
+        coordinates: [parseFloat(longitude), parseFloat(latitude)],
+      };
+    }
+
+    // Update opening hours if provided
+    if (openingHours) {
+      business.openingHours = openingHours;
+    }
+
+    // Update social media links if provided
+    if (socialMedia) {
+      business.socialMedia = socialMedia;
+    }
+
+    await business.save();
+
+    // Create activity log
+    await ActivityLog.create({
+      action: "BUSINESS_UPDATE",
+      userId: req.user.id,
+      details: `Business "${business.name}" profile updated`,
+    });
+
+    return res.status(200).json({
+      message: "Business profile updated successfully",
+      business,
+    });
+  } catch (err) {
+    console.error("❌ Update business profile error:", err);
+    return res
+      .status(500)
+      .json({ message: "Failed to update business profile" });
+  }
+};

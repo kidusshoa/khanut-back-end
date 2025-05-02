@@ -4,6 +4,7 @@ import {
   registerBusiness,
   updateBusinessPicture,
   addBusinessService,
+  updateBusinessProfile,
 } from "../controllers/businessController";
 import { isBusiness } from "../middleware/isBusiness";
 import { AuthRequest } from "../types/express";
@@ -160,5 +161,60 @@ router.post(
   upload.array("images", 5),
   typedHandler(addBusinessService)
 );
+
+/**
+ * @swagger
+ * /api/businesses/profile:
+ *   put:
+ *     summary: Update business profile
+ *     tags: [Business]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               city:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               website:
+ *                 type: string
+ *               openingHours:
+ *                 type: object
+ *               socialMedia:
+ *                 type: object
+ *               latitude:
+ *                 type: number
+ *               longitude:
+ *                 type: number
+ *               address:
+ *                 type: string
+ *               businessType:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Business profile updated successfully
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Business not found
+ *       500:
+ *         description: Server error
+ */
+router.put("/profile", isBusiness, typedHandler(updateBusinessProfile));
 
 export default router;

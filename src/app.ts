@@ -11,6 +11,8 @@ import adminSettingRoutes from "./routes/adminSetting";
 import adminRecommendationRoutes from "./routes/adminRecommendation";
 import webhookRoutes from "./routes/webhook";
 import customerHomeRoutes from "./routes/customerHome";
+import businessAnalyticsRoutes from "./routes/businessAnalytics";
+import inventoryRoutes from "./routes/inventory";
 import businessRoutes from "./routes/business";
 import businessDetailRoutes from "./routes/businessDetail";
 import businessStatusRoutes from "./routes/businessStatus";
@@ -90,5 +92,9 @@ app.use("/api/categories", serviceCategoryRoutes);
 // Staff management routes
 app.use("/api/staff", staffRoutes);
 app.use("/api/recurring-appointments", recurringAppointmentRoutes);
+
+// Analytics and inventory routes
+app.use("/api/analytics", businessAnalyticsRoutes);
+app.use("/api/inventory", inventoryRoutes);
 
 export default app;

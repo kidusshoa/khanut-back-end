@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Business } from "../models/business";
 import { Review } from "../models/review";
+import axios from "axios";
 
 interface AuthRequest extends Request {
   user: {
@@ -80,11 +81,13 @@ export const getRecommendedBusinesses = async (
     const userId = req.user.id;
     const RECOMMENDATION_SERVICE_URL =
       process.env.RECOMMENDATION_SERVICE_URL || "http://localhost:5000";
+    const method = (req.query.method as string) || "hybrid";
+    const limit = parseInt(req.query.limit as string) || 5;
 
     try {
       // Try to get recommendations from the recommendation service
       const response = await axios.get(
-        `${RECOMMENDATION_SERVICE_URL}/api/v1/recommendations/${userId}?limit=5`
+        `${RECOMMENDATION_SERVICE_URL}/api/v1/recommendations/${userId}?limit=${limit}&method=${method}`
       );
 
       // If successful, fetch the full business details from our database
@@ -103,11 +106,21 @@ export const getRecommendedBusinesses = async (
           .map((id) => businesses.find((b) => b._id.toString() === id))
           .filter(Boolean);
 
-        return res.json(sortedBusinesses);
+        // Add prediction scores to the response
+        const enhancedBusinesses = sortedBusinesses.map((business, index) => {
+          const recommendation = response.data.recommendations[index];
+          return {
+            ...business.toObject(),
+            predictionScore: recommendation.predicted_rating,
+            recommendationMethod: method,
+          };
+        });
+
+        return res.json(enhancedBusinesses);
       }
     } catch (recError) {
       console.log(
-        "Recommendation service error, falling back to default recommendations:",
+        `Recommendation service error (method=${method}), falling back to default recommendations:`,
         recError
       );
       // If recommendation service fails, fall back to default recommendations
@@ -118,7 +131,7 @@ export const getRecommendedBusinesses = async (
       approved: true,
     })
       .sort({ rating: -1 })
-      .limit(5);
+      .limit(limit);
 
     res.json(recommendations);
   } catch (err) {

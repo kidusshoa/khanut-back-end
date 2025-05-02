@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Review } from "../models/review";
 import { ActivityLog } from "../models/activityLog";
+import { emitReviewWebhook } from "./webhookController";
 
 export const getPendingReviews = async (req: Request, res: Response) => {
   try {
@@ -46,6 +47,12 @@ export const approveReview = async (req: Request, res: Response) => {
       message: `Review by ${review.authorId} approved.`,
     });
 
+    // Emit webhook for recommendation engine
+    await emitReviewWebhook("review.updated", {
+      reviewId: review._id,
+      status: "approved",
+    });
+
     return res.json({ message: "Review approved" });
   } catch (err) {
     console.error("❌ Approve review error:", err);
@@ -65,6 +72,12 @@ export const rejectReview = async (req: Request, res: Response) => {
 
     await ActivityLog.create({
       message: `Review by ${review.authorId} rejected.`,
+    });
+
+    // Emit webhook for recommendation engine
+    await emitReviewWebhook("review.updated", {
+      reviewId: review._id,
+      status: "rejected",
     });
 
     return res.json({ message: "Review rejected" });

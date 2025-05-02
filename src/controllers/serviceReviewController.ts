@@ -3,6 +3,7 @@ import { ServiceReview } from "../models/serviceReview";
 import { Service } from "../models/service";
 import { User } from "../models/user";
 import mongoose from "mongoose";
+import { emitReviewWebhook } from "./webhookController";
 
 // Get all reviews for a service
 export const getServiceReviews = async (req: Request, res: Response) => {
@@ -105,6 +106,15 @@ export const createReview = async (req: Request, res: Response) => {
     // Update service with new rating (if we decide to add rating field to service model)
     // await Service.findByIdAndUpdate(serviceId, { rating: averageRating });
 
+    // Emit webhook for recommendation engine
+    await emitReviewWebhook("serviceReview.created", {
+      reviewId: newReview._id,
+      serviceId,
+      businessId,
+      customerId,
+      rating,
+    });
+
     return res.status(201).json(newReview);
   } catch (error) {
     console.error("Error creating review:", error);
@@ -147,6 +157,15 @@ export const updateReview = async (req: Request, res: Response) => {
     // Update service with new rating (if we decide to add rating field to service model)
     // await Service.findByIdAndUpdate(review.serviceId, { rating: averageRating });
 
+    // Emit webhook for recommendation engine
+    await emitReviewWebhook("serviceReview.updated", {
+      reviewId: review._id,
+      serviceId: review.serviceId,
+      businessId: review.businessId,
+      customerId: review.customerId,
+      rating: review.rating,
+    });
+
     return res.status(200).json(review);
   } catch (error) {
     console.error("Error updating review:", error);
@@ -172,6 +191,14 @@ export const deleteReview = async (req: Request, res: Response) => {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
+    // Store review data before deletion for webhook
+    const reviewData = {
+      reviewId: review._id,
+      serviceId: review.serviceId,
+      businessId: review.businessId,
+      customerId: review.customerId,
+    };
+
     await ServiceReview.findByIdAndDelete(reviewId);
 
     // Recalculate average rating for the service
@@ -189,6 +216,9 @@ export const deleteReview = async (req: Request, res: Response) => {
       // Update service with new rating (if we decide to add rating field to service model)
       // await Service.findByIdAndUpdate(review.serviceId, { rating: averageRating });
     }
+
+    // Emit webhook for recommendation engine
+    await emitReviewWebhook("serviceReview.deleted", reviewData);
 
     return res.status(200).json({ message: "Review deleted successfully" });
   } catch (error) {

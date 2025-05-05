@@ -1,6 +1,6 @@
-import express from 'express';
-import { isAdmin } from '../middleware/auth';
-import { syncRecommendationData } from '../controllers/adminRecommendationController';
+import express from "express";
+import { protect } from "../middleware/auth";
+import { syncRecommendationData } from "../controllers/adminRecommendationController";
 
 const router = express.Router();
 
@@ -18,6 +18,6 @@ const router = express.Router();
  *       500:
  *         description: Error in recommendation data sync
  */
-router.post('/sync', isAdmin, syncRecommendationData);
+router.post("/sync", protect(["admin"]), syncRecommendationData);
 
 export default router;

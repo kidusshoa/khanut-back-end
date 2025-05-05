@@ -103,18 +103,22 @@ export const getRecommendedBusinesses = async (
 
         // Sort businesses in the same order as recommendations
         const sortedBusinesses = businessIds
-          .map((id) => businesses.find((b) => b._id.toString() === id))
+          .map((id: string) =>
+            businesses.find((b: any) => b._id.toString() === id)
+          )
           .filter(Boolean);
 
         // Add prediction scores to the response
-        const enhancedBusinesses = sortedBusinesses.map((business, index) => {
-          const recommendation = response.data.recommendations[index];
-          return {
-            ...business.toObject(),
-            predictionScore: recommendation.predicted_rating,
-            recommendationMethod: method,
-          };
-        });
+        const enhancedBusinesses = sortedBusinesses.map(
+          (business: any, index: number) => {
+            const recommendation = response.data.recommendations[index];
+            return {
+              ...business.toObject(),
+              predictionScore: recommendation.predicted_rating,
+              recommendationMethod: method,
+            };
+          }
+        );
 
         return res.json(enhancedBusinesses);
       }

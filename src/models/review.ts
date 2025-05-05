@@ -6,6 +6,8 @@ export interface IReview extends Document {
   rating: number;
   comment: string;
   status: "pending" | "approved" | "rejected";
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const ReviewSchema: Schema = new Schema(

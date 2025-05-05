@@ -4,6 +4,7 @@ import { Payment } from "../models/payment";
 import { Order } from "../models/order";
 import { Appointment } from "../models/appointment";
 import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
 import {
   initializePayment,
   verifyPayment,
@@ -11,7 +12,9 @@ import {
 } from "../services/paymentService";
 import { chapaConfig } from "../config/chapa";
 
-// Chapa webhook secret for verification
+// Chapa API configuration
+const CHAPA_API_URL = chapaConfig.apiUrl;
+const CHAPA_SECRET_KEY = chapaConfig.secretKey;
 const CHAPA_WEBHOOK_SECRET = chapaConfig.webhookSecret;
 
 // Initialize payment for an order
@@ -187,19 +190,19 @@ export const initializeAppointmentPayment = async (
 };
 
 // Verify payment status
-export const verifyPayment = async (req: Request, res: Response) => {
+export const verifyPaymentStatus = async (req: Request, res: Response) => {
   try {
-    const { txRef } = req.params;
+    const { transactionRef } = req.params;
 
     // Check if payment exists
-    const payment = await Payment.findOne({ chapaReference: txRef });
+    const payment = await Payment.findOne({ chapaReference: transactionRef });
     if (!payment) {
       return res.status(404).json({ message: "Payment not found" });
     }
 
     // Verify with Chapa
     const chapaResponse = await axios.get(
-      `${CHAPA_API_URL}/v1/transaction/verify/${txRef}`,
+      `${CHAPA_API_URL}/v1/transaction/verify/${transactionRef}`,
       {
         headers: {
           Authorization: `Bearer ${CHAPA_SECRET_KEY}`,
@@ -282,6 +285,84 @@ export const chapaWebhook = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error processing webhook:", error);
     return res.status(500).json({ message: "Webhook processing failed" });
+  }
+};
+
+// Handle payment callback from Chapa
+export const handlePaymentCallback = async (req: Request, res: Response) => {
+  try {
+    const { tx_ref, status } = req.query;
+
+    if (!tx_ref) {
+      return res
+        .status(400)
+        .json({ message: "Transaction reference is required" });
+    }
+
+    // Find the payment
+    const payment = await Payment.findOne({ chapaReference: tx_ref });
+
+    if (!payment) {
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/payment/status?status=error&message=Payment not found`
+      );
+    }
+
+    // Determine redirect URL based on payment type
+    let redirectUrl = "";
+
+    if (payment.paymentType === "order") {
+      redirectUrl = `${process.env.FRONTEND_URL}/customer/${payment.customerId}/orders/${payment.referenceId}?status=${status || "pending"}`;
+    } else if (payment.paymentType === "appointment") {
+      redirectUrl = `${process.env.FRONTEND_URL}/customer/${payment.customerId}/appointments/${payment.referenceId}?status=${status || "pending"}`;
+    } else {
+      redirectUrl = `${process.env.FRONTEND_URL}/payment/status?status=${status || "pending"}`;
+    }
+
+    return res.redirect(redirectUrl);
+  } catch (error) {
+    console.error("❌ Payment callback error:", error);
+    // Redirect to frontend with error status
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/payment/status?status=error`
+    );
+  }
+};
+
+// Get order payment status
+export const getOrderPaymentStatus = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    const { orderId } = req.params;
+
+    // Check if order exists and belongs to the authenticated user
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Verify order belongs to the authenticated user
+    if (order.customerId.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to view this order" });
+    }
+
+    // Return payment status
+    return res.status(200).json({
+      message: "Payment status retrieved successfully",
+      paymentStatus: order.paymentDetails?.paymentStatus || "not_initiated",
+      orderStatus: order.status,
+      transactionRef: order.paymentDetails?.transactionRef || null,
+    });
+  } catch (error) {
+    console.error("❌ Get payment status error:", error);
+    return res.status(500).json({
+      message: "Failed to get payment status",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 };
 

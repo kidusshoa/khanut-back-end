@@ -1,13 +1,6 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-
-interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    role: string;
-    businessId?: string;
-  };
-}
+import { AuthRequest } from "./auth";
 
 export const isBusiness = (
   req: AuthRequest,
@@ -38,8 +31,17 @@ export const isBusiness = (
     };
 
     next();
-  } catch (err) {
-    console.error("JWT verification failed:", err);
-    return res.status(401).json({ message: "Invalid or expired token" });
+  } catch (error) {
+    console.error("JWT verification failed:", error);
+
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({
+        message: "Token expired",
+        code: "TOKEN_EXPIRED",
+        expiredAt: error.expiredAt,
+      });
+    }
+
+    return res.status(401).json({ message: "Invalid token" });
   }
 };

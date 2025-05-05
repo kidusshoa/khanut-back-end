@@ -16,6 +16,8 @@ export interface IBusiness extends Document {
   approved: boolean;
   status: "pending" | "approved" | "rejected";
   profilePicture?: string;
+  category?: string;
+  rating?: number;
 }
 
 const BusinessSchema: Schema = new Schema(

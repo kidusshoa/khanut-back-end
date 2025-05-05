@@ -19,7 +19,7 @@ export const refresh = async (req: Request, res: Response) => {
     const { id, role } = payload;
 
     const newAccess = jwt.sign({ id, role }, process.env.JWT_SECRET!, {
-      expiresIn: "10h",
+      expiresIn: "30d", // Increased from 10h to 30 days
     });
 
     return res.json({ accessToken: newAccess });
@@ -78,10 +78,10 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
 
   const payload = { id: user._id, role: user.role };
   const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, {
-    expiresIn: "10h",
+    expiresIn: "30d", // Increased from 10h to 30 days
   });
   const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, {
-    expiresIn: "7d",
+    expiresIn: "60d", // Increased from 7d to 60 days
   });
 
   return res.json({

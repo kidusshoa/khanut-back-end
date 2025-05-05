@@ -1,10 +1,10 @@
-import { Router } from "express";
+import { Router, RequestHandler } from "express";
 import {
   getDashboardStats,
   getRevenueData,
   getServiceDistribution,
   getRecentOrders,
-  getUpcomingAppointments
+  getUpcomingAppointments,
 } from "../controllers/businessAnalyticsController";
 import { protect } from "../middleware/auth";
 import { isBusiness } from "../middleware/isBusiness";
@@ -42,7 +42,7 @@ router.get(
   "/business/:businessId/stats",
   protect(["business"]),
   isBusiness,
-  getDashboardStats
+  getDashboardStats as unknown as RequestHandler
 );
 
 /**
@@ -82,7 +82,7 @@ router.get(
   "/business/:businessId/revenue",
   protect(["business"]),
   isBusiness,
-  getRevenueData
+  getRevenueData as unknown as RequestHandler
 );
 
 /**
@@ -116,7 +116,7 @@ router.get(
   "/business/:businessId/services",
   protect(["business"]),
   isBusiness,
-  getServiceDistribution
+  getServiceDistribution as unknown as RequestHandler
 );
 
 /**
@@ -157,7 +157,7 @@ router.get(
   "/business/:businessId/recent-orders",
   protect(["business"]),
   isBusiness,
-  getRecentOrders
+  getRecentOrders as unknown as RequestHandler
 );
 
 /**
@@ -198,7 +198,7 @@ router.get(
   "/business/:businessId/upcoming-appointments",
   protect(["business"]),
   isBusiness,
-  getUpcomingAppointments
+  getUpcomingAppointments as unknown as RequestHandler
 );
 
 export default router;

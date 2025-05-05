@@ -11,6 +11,8 @@ import adminSettingRoutes from "./routes/adminSetting";
 import adminRecommendationRoutes from "./routes/adminRecommendation";
 import webhookRoutes from "./routes/webhook";
 import customerHomeRoutes from "./routes/customerHome";
+import customerDashboardRoutes from "./routes/customerDashboard";
+import cartRoutes from "./routes/cart";
 import businessAnalyticsRoutes from "./routes/businessAnalytics";
 import inventoryRoutes from "./routes/inventory";
 import businessRoutes from "./routes/business";
@@ -74,6 +76,8 @@ app.use("/api/customer", customerHomeRoutes);
 app.use("/api/customer", customerProfileRoutes);
 app.use("/api/customer", customerTransactionRoutes);
 app.use("/api/customer/favorites", favoriteRoutes);
+app.use("/api/customer/dashboard", customerDashboardRoutes);
+app.use("/api/customer/cart", cartRoutes);
 
 // Other routes
 app.use("/api/search", searchRoutes);

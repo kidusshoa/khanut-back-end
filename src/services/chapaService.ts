@@ -1,9 +1,9 @@
-import { Chapa } from 'chapa-nodejs';
-import config from '../config/config';
+import { Chapa } from "chapa-nodejs";
+import { chapaConfig } from "../config/chapa";
 
 // Initialize Chapa with secret key from config
 const chapa = new Chapa({
-  secretKey: config.chapa.secretKey,
+  secretKey: chapaConfig.secretKey,
 });
 
 /**
@@ -33,8 +33,8 @@ export const chapaService = {
   }) => {
     try {
       // Generate transaction reference if not provided
-      const tx_ref = paymentData.tx_ref || await chapa.genTxRef();
-      
+      const tx_ref = paymentData.tx_ref || (await chapa.genTxRef());
+
       // Initialize payment
       const response = await chapa.initialize({
         amount: paymentData.amount,
@@ -43,22 +43,22 @@ export const chapaService = {
         first_name: paymentData.first_name,
         last_name: paymentData.last_name,
         tx_ref,
-        callback_url: paymentData.callback_url || config.chapa.callbackUrl,
-        return_url: paymentData.return_url || config.chapa.returnUrl,
+        callback_url: paymentData.callback_url || chapaConfig.callbackUrl,
+        return_url: paymentData.return_url || chapaConfig.returnUrl,
         customization: paymentData.customization || {
-          title: 'Khanut Payment',
-          description: 'Payment for services/products',
+          title: "Khanut Payment",
+          description: "Payment for services/products",
         },
         phone_number: paymentData.phone_number,
       });
-      
+
       return response;
     } catch (error) {
-      console.error('Chapa payment initialization error:', error);
+      console.error("Chapa payment initialization error:", error);
       throw error;
     }
   },
-  
+
   /**
    * Verify a payment transaction
    * @param {string} tx_ref - Transaction reference
@@ -69,11 +69,11 @@ export const chapaService = {
       const response = await chapa.verify({ tx_ref });
       return response;
     } catch (error) {
-      console.error('Chapa payment verification error:', error);
+      console.error("Chapa payment verification error:", error);
       throw error;
     }
   },
-  
+
   /**
    * Generate a transaction reference
    * @param {Object} options - Options for generating transaction reference
@@ -87,11 +87,11 @@ export const chapaService = {
     try {
       return await chapa.genTxRef(options);
     } catch (error) {
-      console.error('Error generating transaction reference:', error);
+      console.error("Error generating transaction reference:", error);
       throw error;
     }
   },
-  
+
   /**
    * Initialize a mobile payment transaction
    * @param {Object} paymentData - Payment data
@@ -115,8 +115,8 @@ export const chapaService = {
   }) => {
     try {
       // Generate transaction reference if not provided
-      const tx_ref = paymentData.tx_ref || await chapa.genTxRef();
-      
+      const tx_ref = paymentData.tx_ref || (await chapa.genTxRef());
+
       // Initialize mobile payment
       const response = await chapa.mobileInitialize({
         amount: paymentData.amount,
@@ -126,21 +126,21 @@ export const chapaService = {
         last_name: paymentData.last_name,
         phone_number: paymentData.phone_number,
         tx_ref,
-        callback_url: paymentData.callback_url || config.chapa.callbackUrl,
-        return_url: paymentData.return_url || config.chapa.returnUrl,
+        callback_url: paymentData.callback_url || chapaConfig.callbackUrl,
+        return_url: paymentData.return_url || chapaConfig.returnUrl,
         customization: paymentData.customization || {
-          title: 'Khanut Mobile Payment',
-          description: 'Mobile payment for services/products',
+          title: "Khanut Mobile Payment",
+          description: "Mobile payment for services/products",
         },
       });
-      
+
       return response;
     } catch (error) {
-      console.error('Chapa mobile payment initialization error:', error);
+      console.error("Chapa mobile payment initialization error:", error);
       throw error;
     }
   },
-  
+
   /**
    * Process a direct charge (e.g., Telebirr)
    * @param {Object} chargeData - Charge data
@@ -154,12 +154,18 @@ export const chapaService = {
     last_name: string;
     mobile: string;
     tx_ref?: string;
-    type: 'telebirr' | 'mpesa' | 'Amole' | 'CBEBirr' | 'Coopay-Ebirr' | 'AwashBirr';
+    type:
+      | "telebirr"
+      | "mpesa"
+      | "Amole"
+      | "CBEBirr"
+      | "Coopay-Ebirr"
+      | "AwashBirr";
   }) => {
     try {
       // Generate transaction reference if not provided
-      const tx_ref = chargeData.tx_ref || await chapa.genTxRef();
-      
+      const tx_ref = chargeData.tx_ref || (await chapa.genTxRef());
+
       // Process direct charge
       const response = await chapa.directCharge({
         amount: chargeData.amount,
@@ -171,14 +177,14 @@ export const chapaService = {
         tx_ref,
         type: chargeData.type,
       });
-      
+
       return response;
     } catch (error) {
-      console.error('Chapa direct charge error:', error);
+      console.error("Chapa direct charge error:", error);
       throw error;
     }
   },
-  
+
   /**
    * Authorize a direct charge
    * @param {Object} authData - Authorization data
@@ -187,7 +193,13 @@ export const chapaService = {
   authorizeDirectCharge: async (authData: {
     reference: string;
     client: string;
-    type: 'telebirr' | 'mpesa' | 'Amole' | 'CBEBirr' | 'Coopay-Ebirr' | 'AwashBirr';
+    type:
+      | "telebirr"
+      | "mpesa"
+      | "Amole"
+      | "CBEBirr"
+      | "Coopay-Ebirr"
+      | "AwashBirr";
   }) => {
     try {
       const response = await chapa.authorizeDirectCharge({
@@ -195,10 +207,10 @@ export const chapaService = {
         client: authData.client,
         type: authData.type,
       });
-      
+
       return response;
     } catch (error) {
-      console.error('Chapa direct charge authorization error:', error);
+      console.error("Chapa direct charge authorization error:", error);
       throw error;
     }
   },

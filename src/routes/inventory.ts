@@ -1,9 +1,9 @@
-import { Router } from "express";
+import { Router, RequestHandler } from "express";
 import {
   getBusinessInventory,
   updateProductStock,
   batchUpdateStock,
-  getStockHistory
+  getStockHistory,
 } from "../controllers/inventoryController";
 import { protect } from "../middleware/auth";
 import { isBusiness } from "../middleware/isBusiness";
@@ -51,7 +51,7 @@ router.get(
   "/business/:businessId",
   protect(["business"]),
   isBusiness,
-  getBusinessInventory
+  getBusinessInventory as unknown as RequestHandler
 );
 
 /**
@@ -101,7 +101,7 @@ router.patch(
   "/product/:productId",
   protect(["business"]),
   isBusiness,
-  updateProductStock
+  updateProductStock as unknown as RequestHandler
 );
 
 /**
@@ -161,7 +161,7 @@ router.post(
   "/business/:businessId/batch",
   protect(["business"]),
   isBusiness,
-  batchUpdateStock
+  batchUpdateStock as unknown as RequestHandler
 );
 
 /**
@@ -197,7 +197,7 @@ router.get(
   "/product/:productId/history",
   protect(["business"]),
   isBusiness,
-  getStockHistory
+  getStockHistory as unknown as RequestHandler
 );
 
 export default router;

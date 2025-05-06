@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { RequestHandler, Router } from "express";
 import {
   createRecurringAppointment,
   getBusinessRecurringAppointments,
@@ -83,7 +83,7 @@ const router = Router();
 router.post(
   "/",
   protect(["business", "customer"]),
-  createRecurringAppointment
+  createRecurringAppointment as unknown as RequestHandler
 );
 
 /**
@@ -207,7 +207,7 @@ router.get("/:recurringId", getRecurringAppointmentById);
 router.patch(
   "/:recurringId/status",
   protect(["business", "customer"]),
-  updateRecurringAppointmentStatus
+  updateRecurringAppointmentStatus as unknown as RequestHandler
 );
 
 /**
@@ -241,7 +241,7 @@ router.patch(
 router.delete(
   "/:recurringId",
   protect(["business", "customer"]),
-  deleteRecurringAppointment
+  deleteRecurringAppointment as unknown as RequestHandler
 );
 
 /**

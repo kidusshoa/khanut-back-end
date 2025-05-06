@@ -561,7 +561,7 @@ export const getUpcomingAppointments = async (
           ? (appointment.serviceId as any).name
           : "Unknown Service",
         date: appointmentDate,
-        duration: appointment.duration || 60,
+        duration: 60,
       };
     });
 

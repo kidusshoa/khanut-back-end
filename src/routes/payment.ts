@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, RequestHandler } from "express";
 import {
   initializeOrderPayment,
   initializeAppointmentPayment,
@@ -222,7 +222,7 @@ router.get(
   "/order/:orderId/status",
   protect(["customer"]),
   isCustomer,
-  getOrderPaymentStatus
+  getOrderPaymentStatus as unknown as RequestHandler
 );
 
 /**

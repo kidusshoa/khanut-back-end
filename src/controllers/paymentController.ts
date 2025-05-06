@@ -13,9 +13,9 @@ import {
 import { chapaConfig } from "../config/chapa";
 
 // Chapa API configuration
-const CHAPA_API_URL = chapaConfig.apiUrl;
+const CHAPA_API_URL = process.env.CHAPA_API_URL || "https://api.chapa.co";
 const CHAPA_SECRET_KEY = chapaConfig.secretKey;
-const CHAPA_WEBHOOK_SECRET = chapaConfig.webhookSecret;
+const CHAPA_WEBHOOK_SECRET = process.env.CHAPA_WEBHOOK_SECRET || "";
 
 // Initialize payment for an order
 export const initializeOrderPayment = async (req: Request, res: Response) => {

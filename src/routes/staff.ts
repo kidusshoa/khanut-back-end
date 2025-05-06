@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, RequestHandler } from "express";
 import {
   getBusinessStaff,
   getStaffById,
@@ -139,7 +139,7 @@ router.post(
   "/business/:businessId",
   protect(["business"]),
   isBusiness,
-  createStaff
+  createStaff as unknown as RequestHandler
 );
 
 /**
@@ -208,7 +208,12 @@ router.post(
  *       500:
  *         description: Server error
  */
-router.put("/:staffId", protect(["business"]), isBusiness, updateStaff);
+router.put(
+  "/:staffId",
+  protect(["business"]),
+  isBusiness,
+  updateStaff as unknown as RequestHandler
+);
 
 /**
  * @swagger
@@ -236,7 +241,12 @@ router.put("/:staffId", protect(["business"]), isBusiness, updateStaff);
  *       500:
  *         description: Server error
  */
-router.delete("/:staffId", protect(["business"]), isBusiness, deleteStaff);
+router.delete(
+  "/:staffId",
+  protect(["business"]),
+  isBusiness,
+  deleteStaff as unknown as RequestHandler
+);
 
 /**
  * @swagger
@@ -316,7 +326,7 @@ router.post(
   "/:staffId/unavailable",
   protect(["business"]),
   isBusiness,
-  setStaffUnavailableDates
+  setStaffUnavailableDates as unknown as RequestHandler
 );
 
 /**
@@ -379,7 +389,7 @@ router.delete(
   "/unavailable/:unavailabilityId",
   protect(["business"]),
   isBusiness,
-  deleteStaffUnavailableDates
+  deleteStaffUnavailableDates as unknown as RequestHandler
 );
 
 /**
@@ -427,7 +437,7 @@ router.post(
   "/appointment/:appointmentId/assign",
   protect(["business"]),
   isBusiness,
-  assignStaffToAppointment
+  assignStaffToAppointment as unknown as RequestHandler
 );
 
 /**
@@ -474,7 +484,7 @@ router.patch(
   "/assignment/:assignmentId/status",
   protect(["business"]),
   isBusiness,
-  updateStaffAssignmentStatus
+  updateStaffAssignmentStatus as unknown as RequestHandler
 );
 
 export default router;

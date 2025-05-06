@@ -46,7 +46,15 @@ export const createRecurringAppointment = async (
     } = req.body;
 
     // Validate required fields
-    if (!customerId || !businessId || !serviceId || !recurrencePattern || !startDate || !startTime || !endTime) {
+    if (
+      !customerId ||
+      !businessId ||
+      !serviceId ||
+      !recurrencePattern ||
+      !startDate ||
+      !startTime ||
+      !endTime
+    ) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields",
@@ -111,7 +119,8 @@ export const createRecurringAppointment = async (
       if (dayOfWeek === undefined || dayOfWeek < 0 || dayOfWeek > 6) {
         return res.status(400).json({
           success: false,
-          message: "Day of week is required for weekly and biweekly patterns (0-6)",
+          message:
+            "Day of week is required for weekly and biweekly patterns (0-6)",
         });
       }
     }
@@ -166,7 +175,7 @@ export const createRecurringAppointment = async (
     // Update recurring appointment with appointment IDs
     recurringAppointment.appointmentIds = appointments.map(
       (appointment) => appointment._id
-    );
+    ) as mongoose.Types.ObjectId[];
     await recurringAppointment.save({ session });
 
     await session.commitTransaction();
@@ -281,7 +290,9 @@ export const getRecurringAppointmentById = async (
   try {
     const { recurringId } = req.params;
 
-    const recurringAppointment = await RecurringAppointment.findById(recurringId)
+    const recurringAppointment = await RecurringAppointment.findById(
+      recurringId
+    )
       .populate("customerId", "name email")
       .populate("businessId", "name")
       .populate("serviceId", "name price duration")
@@ -339,7 +350,8 @@ export const updateRecurringAppointmentStatus = async (
     }
 
     // Find the recurring appointment
-    const recurringAppointment = await RecurringAppointment.findById(recurringId);
+    const recurringAppointment =
+      await RecurringAppointment.findById(recurringId);
     if (!recurringAppointment) {
       return res.status(404).json({
         success: false,
@@ -415,7 +427,8 @@ export const deleteRecurringAppointment = async (
     const { deleteFutureAppointments } = req.query;
 
     // Find the recurring appointment
-    const recurringAppointment = await RecurringAppointment.findById(recurringId);
+    const recurringAppointment =
+      await RecurringAppointment.findById(recurringId);
     if (!recurringAppointment) {
       return res.status(404).json({
         success: false,
@@ -511,7 +524,8 @@ export const previewRecurringAppointmentDates = async (
       if (dayOfWeek === undefined || dayOfWeek < 0 || dayOfWeek > 6) {
         return res.status(400).json({
           success: false,
-          message: "Day of week is required for weekly and biweekly patterns (0-6)",
+          message:
+            "Day of week is required for weekly and biweekly patterns (0-6)",
         });
       }
     }
@@ -639,7 +653,7 @@ function generateRecurringDates(
   } else if (recurrencePattern === "monthly" && dayOfMonth !== undefined) {
     // Set to the specified day of month
     currentDate = setDate(currentDate, dayOfMonth);
-    
+
     // If the resulting date is before the start date, move to next month
     if (isBefore(currentDate, startDate)) {
       currentDate = addMonths(currentDate, 1);
@@ -648,7 +662,9 @@ function generateRecurringDates(
 
   // Generate dates
   while (
-    (endDate === null || isBefore(currentDate, maxDate) || isSameDay(currentDate, maxDate)) &&
+    (endDate === null ||
+      isBefore(currentDate, maxDate) ||
+      isSameDay(currentDate, maxDate)) &&
     (maxOccurrences === undefined || occurrences < maxOccurrences)
   ) {
     dates.push(new Date(currentDate));
@@ -695,7 +711,7 @@ function calculateEndDateFromOccurrences(
   } else if (recurrencePattern === "monthly" && dayOfMonth !== undefined) {
     // Set to the specified day of month
     currentDate = setDate(currentDate, dayOfMonth);
-    
+
     // If the resulting date is before the start date, move to next month
     if (isBefore(currentDate, startDate)) {
       currentDate = addMonths(currentDate, 1);

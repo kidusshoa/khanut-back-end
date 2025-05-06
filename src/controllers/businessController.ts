@@ -166,20 +166,23 @@ export const updateBusinessProfile = async (
       return res.status(404).json({ message: "Business not found" });
     }
 
+    // Create a business document with the correct type
+    const businessDoc = business as any;
+
     // Update business fields if provided
-    if (name) business.name = name;
-    if (description) business.description = description;
-    if (category) business.category = category;
-    if (city) business.city = city;
-    if (email) business.email = email;
-    if (phone) business.phone = phone;
-    if (website) business.website = website;
-    if (businessType) business.businessType = businessType;
-    if (address) business.address = address;
+    if (name) businessDoc.name = name;
+    if (description) businessDoc.description = description;
+    if (category) businessDoc.category = category;
+    if (city) businessDoc.city = city;
+    if (email) businessDoc.email = email;
+    if (phone) businessDoc.phone = phone;
+    if (website) businessDoc.website = website;
+    if (businessType) businessDoc.businessType = businessType;
+    if (address) businessDoc.address = address;
 
     // Update location if both latitude and longitude are provided
     if (latitude && longitude) {
-      business.location = {
+      businessDoc.location = {
         type: "Point",
         coordinates: [parseFloat(longitude), parseFloat(latitude)],
       };
@@ -187,26 +190,26 @@ export const updateBusinessProfile = async (
 
     // Update opening hours if provided
     if (openingHours) {
-      business.openingHours = openingHours;
+      businessDoc.openingHours = openingHours;
     }
 
     // Update social media links if provided
     if (socialMedia) {
-      business.socialMedia = socialMedia;
+      businessDoc.socialMedia = socialMedia;
     }
 
-    await business.save();
+    await businessDoc.save();
 
     // Create activity log
     await ActivityLog.create({
       action: "BUSINESS_UPDATE",
       userId: req.user.id,
-      details: `Business "${business.name}" profile updated`,
+      details: `Business "${businessDoc.name}" profile updated`,
     });
 
     return res.status(200).json({
       message: "Business profile updated successfully",
-      business,
+      business: businessDoc,
     });
   } catch (err) {
     console.error("❌ Update business profile error:", err);

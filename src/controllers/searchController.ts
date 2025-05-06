@@ -351,12 +351,18 @@ export const advancedSearch = async (req: Request, res: Response) => {
     const serviceBusinessIds = services.map((s) => s.businessId.toString());
 
     // Find additional businesses from services that weren't in the original business results
-    const businessIdsFromResults = businesses.map((b) => b._id.toString());
+    // Use proper typing for the business document
+    const businessIdsFromResults = businesses.map((b) => {
+      // Ensure b._id is properly typed by checking if it exists
+      return b._id ? b._id.toString() : "";
+    });
+
     const additionalBusinessIds = serviceBusinessIds.filter(
       (id) => !businessIdsFromResults.includes(id)
     );
 
-    let additionalBusinesses = [];
+    // Define the type for additionalBusinesses
+    let additionalBusinesses: typeof businesses = [];
     if (additionalBusinessIds.length > 0) {
       additionalBusinesses = await Business.find({
         _id: { $in: additionalBusinessIds },

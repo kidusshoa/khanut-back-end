@@ -18,6 +18,11 @@ export interface IBusiness extends Document {
   profilePicture?: string;
   category?: string;
   rating?: number;
+  website?: string;
+  businessType?: string;
+  address?: string;
+  openingHours?: any; // Define a more specific type if needed
+  socialMedia?: any; // Define a more specific type if needed
 }
 
 const BusinessSchema: Schema = new Schema(
@@ -42,6 +47,11 @@ const BusinessSchema: Schema = new Schema(
     services: [{ type: Schema.Types.ObjectId, ref: "Service" }],
     reviews: [{ type: Schema.Types.ObjectId, ref: "Review" }],
     profilePicture: String,
+    website: { type: String },
+    businessType: { type: String },
+    address: { type: String },
+    openingHours: { type: Schema.Types.Mixed },
+    socialMedia: { type: Schema.Types.Mixed },
   },
   { timestamps: true }
 );

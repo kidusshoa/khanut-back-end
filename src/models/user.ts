@@ -5,11 +5,14 @@ export interface IUser extends Document {
   email: string;
   name: string;
   password: string;
+  phone?: string;
   role: "admin" | "business" | "customer";
   notify: boolean;
   profilePicture?: string;
   twoFactorCode?: string;
   twoFactorCodeExpiry?: Date;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   favorites: mongoose.Types.ObjectId[];
   comparePassword(candidate: string): Promise<boolean>;
 }
@@ -19,6 +22,7 @@ const UserSchema: Schema = new Schema(
     email: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     password: { type: String, required: true },
+    phone: { type: String },
     role: {
       type: String,
       enum: ["admin", "business", "customer"],
@@ -28,6 +32,8 @@ const UserSchema: Schema = new Schema(
     profilePicture: String,
     twoFactorCode: String,
     twoFactorCodeExpiry: Date,
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
     favorites: [{ type: Schema.Types.ObjectId, ref: "Business" }],
   },
   { timestamps: true }

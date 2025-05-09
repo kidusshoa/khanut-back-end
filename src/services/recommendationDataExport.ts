@@ -139,11 +139,21 @@ export const uploadDataToRecommendationService = async (
 
 /**
  * Triggers retraining of the recommendation model
+ * @param useMongoDb Whether to use MongoDB data directly (true) or CSV files (false)
  */
-export const triggerModelRetraining = async (): Promise<boolean> => {
+export const triggerModelRetraining = async (
+  useMongoDb: boolean = true
+): Promise<boolean> => {
   try {
     const response = await axios.post(
-      `${RECOMMENDATION_SERVICE_URL}/api/v1/retrain`
+      `${RECOMMENDATION_SERVICE_URL}/api/v1/retrain`,
+      null,
+      {
+        params: {
+          use_mongodb: useMongoDb,
+          save_to_csv: true,
+        },
+      }
     );
     console.log("✅ Model retraining triggered:", response.data);
     return true;
@@ -154,23 +164,66 @@ export const triggerModelRetraining = async (): Promise<boolean> => {
 };
 
 /**
+ * Checks if the recommendation service is using MongoDB
+ */
+export const checkIfUsingMongoDB = async (): Promise<boolean> => {
+  try {
+    // Check health endpoint to see if MongoDB is connected
+    const response = await axios.get(
+      `${RECOMMENDATION_SERVICE_URL}/api/v1/health`
+    );
+
+    // If the health endpoint shows MongoDB is connected, use it
+    if (response.data && response.data.mongodb_connected === true) {
+      console.log("✅ Recommendation service has MongoDB connection");
+      return true;
+    }
+
+    console.log("❌ Recommendation service does not have MongoDB connection");
+    return false;
+  } catch (error) {
+    console.error(
+      "❌ Error checking recommendation service MongoDB status:",
+      error
+    );
+    return false;
+  }
+};
+
+/**
  * Exports data, uploads it to the recommendation service, and triggers retraining
  */
 export const syncRecommendationData = async (): Promise<boolean> => {
   try {
-    // Export data to CSV
-    const reviewsPath = await exportReviewsToCSV();
-    const businessesPath = await exportBusinessesToCSV();
+    // Check if the recommendation service is configured to use MongoDB directly
+    const useMongoDb = await checkIfUsingMongoDB();
 
-    // Upload data to recommendation service
-    const uploadSuccess = await uploadDataToRecommendationService(
-      reviewsPath,
-      businessesPath
-    );
+    if (useMongoDb) {
+      console.log(
+        "✅ Recommendation service is configured to use MongoDB directly"
+      );
 
-    // Trigger model retraining if upload was successful
-    if (uploadSuccess) {
-      await triggerModelRetraining();
+      // Trigger model retraining with MongoDB data
+      return await triggerModelRetraining(true);
+    } else {
+      console.log(
+        "❌ Recommendation service is not using MongoDB directly, exporting CSV files"
+      );
+
+      // Export data to CSV
+      const reviewsPath = await exportReviewsToCSV();
+      const businessesPath = await exportBusinessesToCSV();
+
+      // Upload data to recommendation service
+      const uploadSuccess = await uploadDataToRecommendationService(
+        reviewsPath,
+        businessesPath
+      );
+
+      // Trigger model retraining if upload was successful
+      if (uploadSuccess) {
+        return await triggerModelRetraining(false);
+      }
     }
 
     return true;

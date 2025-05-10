@@ -146,13 +146,38 @@ export const getRecommendedBusinesses = async (
     }
 
     // Fallback: Get businesses with highest ratings
-    const recommendations = await Business.find({
-      approved: true,
-    })
-      .sort({ rating: -1 })
-      .limit(limit);
+    const topRatedBusinesses = await Business.aggregate([
+      { $match: { approved: true } },
+      {
+        $lookup: {
+          from: "reviews",
+          localField: "_id",
+          foreignField: "businessId",
+          as: "reviews",
+        },
+      },
+      {
+        $addFields: {
+          avgRating: { $avg: "$reviews.rating" },
+          reviewCount: { $size: "$reviews" },
+        },
+      },
+      { $sort: { avgRating: -1, reviewCount: -1 } },
+      { $limit: limit },
+    ]);
 
-    res.json(recommendations);
+    console.log(
+      `Returning ${topRatedBusinesses.length} top-rated businesses as fallback`
+    );
+
+    // Return in the same format as the recommendation service response
+    res.json({
+      recommendations: topRatedBusinesses.map((business) => ({
+        ...business,
+        predictionScore: business.avgRating || 4.5,
+        recommendationMethod: "fallback",
+      })),
+    });
   } catch (err) {
     console.error("❌ Recommended businesses error:", err);
     res.status(500).json({ message: "Failed to load recommendations" });

@@ -4,7 +4,10 @@ import { User } from "../models/user";
 import { Business } from "../models/business";
 
 interface AuthRequest extends Request {
-  user: { id: string };
+  user: {
+    id: string;
+    role: string;
+  };
 }
 
 export const getNotifications = async (req: AuthRequest, res: Response) => {
@@ -30,6 +33,14 @@ export const getUnreadCount = async (req: AuthRequest, res: Response) => {
     read: false,
   });
   res.json({ count });
+};
+
+export const markAllAsRead = async (req: AuthRequest, res: Response) => {
+  await Notification.updateMany(
+    { userId: req.user.id, read: false },
+    { read: true }
+  );
+  res.json({ message: "All notifications marked as read" });
 };
 
 export const getBusinessUpdates = async (req: AuthRequest, res: Response) => {

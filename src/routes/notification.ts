@@ -4,10 +4,15 @@ import {
   markNotificationAsRead,
   getUnreadCount,
   getBusinessUpdates,
+  markAllAsRead,
 } from "../controllers/customerNotificationController";
-import { sendNotificationToUser } from "../controllers/adminNotificationController";
+import {
+  sendNotificationToUser,
+  sendSystemNotification,
+} from "../controllers/adminNotificationController";
 import { isCustomer } from "../middleware/isCustomer";
 import { isAdmin } from "../middleware/isAdmin";
+import { isAdminOrCustomer } from "../middleware/isAdminOrCustomer";
 
 const router = express.Router();
 
@@ -36,7 +41,7 @@ interface AuthRequest extends Request {
  *       200:
  *         description: List of notifications
  */
-router.get("/", isCustomer, (req, res) =>
+router.get("/", isAdminOrCustomer, (req, res) =>
   getNotifications(req as AuthRequest, res)
 );
 
@@ -52,7 +57,7 @@ router.get("/", isCustomer, (req, res) =>
  *       200:
  *         description: Count of unread notifications
  */
-router.get("/unread", isCustomer, (req, res) =>
+router.get("/unread", isAdminOrCustomer, (req, res) =>
   getUnreadCount(req as AuthRequest, res)
 );
 
@@ -75,8 +80,24 @@ router.get("/unread", isCustomer, (req, res) =>
  *       200:
  *         description: Notification marked as read
  */
-router.patch("/:id/read", isCustomer, (req, res) =>
+router.patch("/:id/read", isAdminOrCustomer, (req, res) =>
   markNotificationAsRead(req as AuthRequest, res)
+);
+
+/**
+ * @swagger
+ * /api/notifications/mark-all-read:
+ *   patch:
+ *     summary: Mark all notifications as read for the logged-in user
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All notifications marked as read
+ */
+router.patch("/mark-all-read", isAdminOrCustomer, (req, res) =>
+  markAllAsRead(req as AuthRequest, res)
 );
 
 /**
@@ -123,5 +144,33 @@ router.get("/business-updates", isCustomer, (req, res) =>
  */
 // Admin internal
 router.post("/admin/send", isAdmin, sendNotificationToUser);
+
+/**
+ * @swagger
+ * /api/notifications/admin/system:
+ *   post:
+ *     summary: Send a system notification to all admins
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               message:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *                 enum: [warning, update, info]
+ *     responses:
+ *       201:
+ *         description: System notification sent
+ */
+router.post("/admin/system", isAdmin, sendSystemNotification);
 
 export default router;

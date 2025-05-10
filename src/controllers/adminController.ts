@@ -42,12 +42,42 @@ export const getAdminDashboard = async (
       ActivityLog.find().sort({ createdAt: -1 }).limit(5),
     ]);
 
+    // Process activity logs to include user and business names
+    const processedActivity = await Promise.all(
+      recentActivity.map(async (log) => {
+        const logObj = log.toObject();
+
+        // Extract user IDs from the message
+        const userIdMatch = logObj.message.match(/[0-9a-fA-F]{24}/g);
+
+        if (userIdMatch) {
+          for (const potentialId of userIdMatch) {
+            // Check if this is a user ID
+            const user = await User.findById(potentialId);
+            if (user) {
+              logObj.userId = potentialId;
+              logObj.userName = user.name;
+            }
+
+            // Check if this is a business ID
+            const business = await Business.findById(potentialId);
+            if (business) {
+              logObj.businessId = potentialId;
+              logObj.businessName = business.name;
+            }
+          }
+        }
+
+        return logObj;
+      })
+    );
+
     res.json({
       totalBusinesses,
       totalUsers,
       pendingApprovals,
       pendingReviews,
-      recentActivity,
+      recentActivity: processedActivity,
     });
   } catch (err) {
     console.error("❌ Dashboard fetch error:", err);

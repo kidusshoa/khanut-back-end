@@ -56,8 +56,7 @@ export const getRecommendationHealth = async (_req: Request, res: Response) => {
   try {
     logger.info("Checking recommendation service health");
 
-    const RECOMMENDATION_SERVICE_URL =
-      process.env.RECOMMENDATION_SERVICE_URL || "http://localhost:5000";
+    const RECOMMENDATION_SERVICE_URL = process.env.RECOMMENDATION_SERVICE_URL;
 
     try {
       const response = await axios.get(
@@ -87,8 +86,7 @@ export const getRecommendationStats = async (_req: Request, res: Response) => {
   try {
     logger.info("Fetching recommendation system statistics");
 
-    const RECOMMENDATION_SERVICE_URL =
-      process.env.RECOMMENDATION_SERVICE_URL || "http://localhost:5000";
+    const RECOMMENDATION_SERVICE_URL = process.env.RECOMMENDATION_SERVICE_URL;
 
     // Get service health
     let serviceHealth: RecommendationServiceHealth | null = null;

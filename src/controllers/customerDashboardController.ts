@@ -173,7 +173,7 @@ export const getRecommendedBusinesses = async (
         .select("_id name description logo coverImage category rating");
     }
 
-    res.status(200).json(recommendedBusinesses);
+    res.status(200).json({ recommendations: recommendedBusinesses });
   } catch (error) {
     console.error("Error fetching recommended businesses:", error);
     res.status(500).json({ message: "Server error" });

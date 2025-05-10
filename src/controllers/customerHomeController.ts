@@ -80,15 +80,21 @@ export const getRecommendedBusinesses = async (
   try {
     const userId = req.user.id;
     const RECOMMENDATION_SERVICE_URL =
-      process.env.RECOMMENDATION_SERVICE_URL || "http://localhost:5000";
+      process.env.RECOMMENDATION_SERVICE_URL || "http://ai.khanut.online";
     const method = (req.query.method as string) || "hybrid";
     const limit = parseInt(req.query.limit as string) || 5;
 
     try {
       // Try to get recommendations from the recommendation service
+      console.log(
+        `Calling recommendation service at: ${RECOMMENDATION_SERVICE_URL}/api/v1/recommendations/${userId}?limit=${limit}&method=${method}`
+      );
+
       const response = await axios.get(
         `${RECOMMENDATION_SERVICE_URL}/api/v1/recommendations/${userId}?limit=${limit}&method=${method}`
       );
+
+      console.log("Recommendation service response:", response.data);
 
       // If successful, fetch the full business details from our database
       if (response.data && response.data.recommendations) {
@@ -96,10 +102,14 @@ export const getRecommendedBusinesses = async (
           (rec: any) => rec.business_id
         );
 
+        console.log("Business IDs from recommendations:", businessIds);
+
         const businesses = await Business.find({
           _id: { $in: businessIds },
           approved: true,
         });
+
+        console.log(`Found ${businesses.length} businesses in database`);
 
         // Sort businesses in the same order as recommendations
         const sortedBusinesses = businessIds
@@ -107,6 +117,8 @@ export const getRecommendedBusinesses = async (
             businesses.find((b: any) => b._id.toString() === id)
           )
           .filter(Boolean);
+
+        console.log(`Sorted ${sortedBusinesses.length} businesses`);
 
         // Add prediction scores to the response
         const enhancedBusinesses = sortedBusinesses.map(
@@ -120,7 +132,10 @@ export const getRecommendedBusinesses = async (
           }
         );
 
-        return res.json(enhancedBusinesses);
+        console.log("Returning enhanced businesses with prediction scores");
+        return res.json({
+          recommendations: enhancedBusinesses,
+        });
       }
     } catch (recError) {
       console.log(

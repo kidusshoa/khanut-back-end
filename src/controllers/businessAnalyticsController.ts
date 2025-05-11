@@ -419,13 +419,13 @@ export const getServiceDistribution = async (
 
     // Count services by type
     const appointmentServices = services.filter(
-      (service) => service.get("type") === "appointment"
+      (service) => service.serviceType === "appointment"
     ).length;
     const productServices = services.filter(
-      (service) => service.get("type") === "product"
+      (service) => service.serviceType === "product"
     ).length;
-    const uniformServices = services.filter(
-      (service) => service.get("type") === "uniform"
+    const inPersonServices = services.filter(
+      (service) => service.serviceType === "in_person"
     ).length;
 
     return res.status(200).json({
@@ -433,7 +433,7 @@ export const getServiceDistribution = async (
       datasets: [
         {
           label: "Service Types",
-          data: [appointmentServices, productServices, uniformServices],
+          data: [appointmentServices, productServices, inPersonServices],
           backgroundColor: [
             "hsla(210, 100%, 50%, 0.7)",
             "hsla(24, 100%, 50%, 0.7)",

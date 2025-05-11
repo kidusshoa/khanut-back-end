@@ -18,6 +18,7 @@ import inventoryRoutes from "./routes/inventory";
 import businessRoutes from "./routes/business";
 import businessDetailRoutes from "./routes/businessDetail";
 import businessStatusRoutes from "./routes/businessStatus";
+import businessNotificationRoutes from "./routes/businessNotification";
 import searchRoutes from "./routes/search";
 import customerProfileRoutes from "./routes/customerProfile";
 import favoriteRoutes from "./routes/favorites";
@@ -70,6 +71,7 @@ app.use("/api/businesses", businessRoutes);
 app.use("/api/businesses", locationRoutes); // Put location routes before detail routes
 app.use("/api/businesses", businessDetailRoutes);
 app.use("/api/business", businessStatusRoutes);
+app.use("/api/business/notifications", businessNotificationRoutes);
 
 // Customer routes
 app.use("/api/customer", customerHomeRoutes);

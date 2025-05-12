@@ -9,6 +9,7 @@ import {
   forgotPassword,
   validateResetToken,
   resetPassword,
+  getUserRole,
 } from "../controllers/authController";
 
 const router = Router();
@@ -282,6 +283,35 @@ router.post(
   "/reset-password",
   resetPassword as (req: Request, res: Response) => void
 );
+
+/**
+ * @swagger
+ * /api/auth/get-role:
+ *   post:
+ *     summary: Get user role by email
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User role
+ *       400:
+ *         description: Email is required
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.post("/get-role", getUserRole as (req: Request, res: Response) => void);
 
 /**
  * Test endpoint for CORS

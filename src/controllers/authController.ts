@@ -160,6 +160,31 @@ export const verify2FA = async (req: Request, res: Response) => {
   });
 };
 
+/**
+ * Get user role by email
+ * Used for redirecting unverified users to the correct verification page
+ */
+export const getUserRole = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email }).select("role");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({ role: user.role });
+  } catch (error) {
+    console.error("Get user role error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const register = async (req: Request, res: Response) => {
   try {
     const { email, name, password, phone, role } = req.body;

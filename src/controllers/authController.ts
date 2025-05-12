@@ -132,11 +132,32 @@ export const verify2FA = async (req: Request, res: Response) => {
     return res.status(400).json({ message: "Invalid or expired code" });
   }
 
+  // Clear 2FA fields
   user.twoFactorCode = undefined;
   user.twoFactorCodeExpiry = undefined;
   await user.save();
 
-  return res.json({ verified: true });
+  // Generate authentication tokens (similar to login)
+  const payload = { id: user._id, role: user.role };
+  const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, {
+    expiresIn: "30d",
+  });
+  const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, {
+    expiresIn: "60d",
+  });
+
+  // Return user data and tokens
+  return res.json({
+    verified: true,
+    user: {
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    },
+    accessToken,
+    refreshToken,
+  });
 };
 
 export const register = async (req: Request, res: Response) => {

@@ -132,7 +132,9 @@ export const createService = async (req: Request, res: Response) => {
       duration: serviceType === "appointment" ? duration : undefined,
       inventory: serviceType === "product" ? inventory : undefined,
       images: req.files
-        ? (req.files as Express.Multer.File[]).map((file) => file.path)
+        ? (req.files as Express.Multer.File[]).map(
+            (file) => (file as any).location || file.path
+          )
         : [],
     });
 
@@ -212,7 +214,7 @@ export const updateService = async (req: Request, res: Response) => {
 
     if (req.files && (req.files as Express.Multer.File[]).length > 0) {
       service.images = (req.files as Express.Multer.File[]).map(
-        (file) => file.path
+        (file) => (file as any).location || file.path
       );
     }
 

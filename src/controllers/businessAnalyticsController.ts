@@ -17,7 +17,17 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     // Verify business exists and user has access
     const business = await Business.findById(businessId);
     if (!business) {
-      return res.status(404).json({ message: "Business not found" });
+      // Return empty stats instead of 404 for new businesses
+      return res.status(200).json({
+        totalRevenue: 0,
+        totalOrders: 0,
+        totalAppointments: 0,
+        totalCustomers: 0,
+        revenueChange: 0,
+        ordersChange: 0,
+        appointmentsChange: 0,
+        customersChange: 0,
+      });
     }
 
     // Check if user owns this business
@@ -167,7 +177,63 @@ export const getRevenueData = async (req: AuthRequest, res: Response) => {
     // Verify business exists and user has access
     const business = await Business.findById(businessId);
     if (!business) {
-      return res.status(404).json({ message: "Business not found" });
+      // Return empty revenue data instead of 404 for new businesses
+      const emptyData = {
+        labels:
+          period === "week"
+            ? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+            : period === "month"
+              ? ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
+              : [
+                  "Jan",
+                  "Feb",
+                  "Mar",
+                  "Apr",
+                  "May",
+                  "Jun",
+                  "Jul",
+                  "Aug",
+                  "Sep",
+                  "Oct",
+                  "Nov",
+                  "Dec",
+                ],
+        datasets: [
+          {
+            label:
+              period === "week"
+                ? "This Week"
+                : period === "month"
+                  ? "This Month"
+                  : "This Year",
+            data:
+              period === "week"
+                ? Array(7).fill(0)
+                : period === "month"
+                  ? Array(5).fill(0)
+                  : Array(12).fill(0),
+            borderColor: "hsl(24, 100%, 50%)",
+            backgroundColor: "hsla(24, 100%, 50%, 0.5)",
+          },
+          {
+            label:
+              period === "week"
+                ? "Last Week"
+                : period === "month"
+                  ? "Last Month"
+                  : "Last Year",
+            data:
+              period === "week"
+                ? Array(7).fill(0)
+                : period === "month"
+                  ? Array(5).fill(0)
+                  : Array(12).fill(0),
+            borderColor: "hsl(210, 100%, 50%)",
+            backgroundColor: "hsla(210, 100%, 50%, 0.5)",
+          },
+        ],
+      };
+      return res.status(200).json(emptyData);
     }
 
     // Check if user owns this business
@@ -401,7 +467,28 @@ export const getServiceDistribution = async (
     // Verify business exists and user has access
     const business = await Business.findById(businessId);
     if (!business) {
-      return res.status(404).json({ message: "Business not found" });
+      // Return empty service distribution data instead of 404 for new businesses
+      const emptyData = {
+        labels: ["Appointments", "Products", "In-Person"],
+        datasets: [
+          {
+            label: "Service Types",
+            data: [0, 0, 0],
+            backgroundColor: [
+              "hsla(210, 100%, 50%, 0.7)",
+              "hsla(24, 100%, 50%, 0.7)",
+              "hsla(130, 100%, 40%, 0.7)",
+            ],
+            borderColor: [
+              "hsl(210, 100%, 50%)",
+              "hsl(24, 100%, 50%)",
+              "hsl(130, 100%, 40%)",
+            ],
+            borderWidth: 1,
+          },
+        ],
+      };
+      return res.status(200).json(emptyData);
     }
 
     // Check if user owns this business
@@ -467,7 +554,8 @@ export const getRecentOrders = async (req: AuthRequest, res: Response) => {
     // Verify business exists and user has access
     const business = await Business.findById(businessId);
     if (!business) {
-      return res.status(404).json({ message: "Business not found" });
+      // Return empty orders array instead of 404 for new businesses
+      return res.status(200).json([]);
     }
 
     // Check if user owns this business
@@ -518,7 +606,8 @@ export const getUpcomingAppointments = async (
     // Verify business exists and user has access
     const business = await Business.findById(businessId);
     if (!business) {
-      return res.status(404).json({ message: "Business not found" });
+      // Return empty appointments array instead of 404 for new businesses
+      return res.status(200).json([]);
     }
 
     // Check if user owns this business

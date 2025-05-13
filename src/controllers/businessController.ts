@@ -109,7 +109,7 @@ export const updateBusinessPicture = async (
 
 export const addBusinessService = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, description, price } = req.body;
+    const { name, description, price, serviceType } = req.body;
     const images = req.files as Express.MulterS3.File[];
 
     const business = await Business.findOne({ ownerId: req.user.id });
@@ -117,11 +117,26 @@ export const addBusinessService = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "Business not found" });
     }
 
+    // Determine if this is being called from the Products page
+    const isProduct =
+      req.originalUrl.includes("/products") ||
+      req.get("Referer")?.includes("/products");
+
+    // Log the request information for debugging
+    console.log("Service creation request:", {
+      body: req.body,
+      originalUrl: req.originalUrl,
+      referer: req.get("Referer"),
+      isProduct,
+    });
+
     const service = new Service({
       name,
       description,
       price: parseFloat(price),
       businessId: business._id,
+      // Set serviceType based on explicit parameter, URL context, or default to "product"
+      serviceType: serviceType || (isProduct ? "product" : "appointment"),
       images: images.map((file) => (file as any).location),
     });
 

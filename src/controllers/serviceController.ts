@@ -22,8 +22,39 @@ export const getAllServices = async (req: Request, res: Response) => {
 export const getBusinessServices = async (req: Request, res: Response) => {
   try {
     const { businessId } = req.params;
+    const { serviceType } = req.query;
 
-    const services = await Service.find({ businessId });
+    console.log("Fetching business services with params:", {
+      businessId,
+      serviceType,
+      query: req.query,
+    });
+
+    // Build the query
+    const query: any = { businessId };
+
+    // Add serviceType filter if provided
+    if (
+      serviceType &&
+      ["appointment", "product", "in_person"].includes(serviceType as string)
+    ) {
+      query.serviceType = serviceType;
+    }
+
+    const services = await Service.find(query);
+
+    console.log(`Found ${services.length} services for business ${businessId}`);
+
+    // Log service types for debugging
+    const serviceTypes = services.reduce(
+      (acc: Record<string, number>, service) => {
+        acc[service.serviceType] = (acc[service.serviceType] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+
+    console.log("Service types distribution:", serviceTypes);
 
     return res.status(200).json(services);
   } catch (error) {

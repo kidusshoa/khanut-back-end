@@ -5,6 +5,9 @@ import {
   getServiceDistribution,
   getRecentOrders,
   getUpcomingAppointments,
+  getComprehensiveAnalytics,
+  getCustomerAnalytics,
+  getPerformanceMetrics,
 } from "../controllers/businessAnalyticsController";
 import { protect } from "../middleware/auth";
 import { isBusiness } from "../middleware/isBusiness";
@@ -199,6 +202,108 @@ router.get(
   protect(["business"]),
   isBusiness,
   getUpcomingAppointments as unknown as RequestHandler
+);
+
+/**
+ * @swagger
+ * /api/analytics/business/{businessId}/comprehensive:
+ *   get:
+ *     summary: Get comprehensive analytics data for a business
+ *     tags: [Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: businessId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Business ID
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *           enum: [today, week, month, year]
+ *         description: Time period for data (default is month)
+ *     responses:
+ *       200:
+ *         description: Comprehensive analytics data
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (not the business owner)
+ *       500:
+ *         description: Server error
+ */
+router.get(
+  "/business/:businessId/comprehensive",
+  protect(["business"]),
+  isBusiness,
+  getComprehensiveAnalytics as unknown as RequestHandler
+);
+
+/**
+ * @swagger
+ * /api/analytics/business/{businessId}/customers:
+ *   get:
+ *     summary: Get customer analytics data for a business
+ *     tags: [Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: businessId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Business ID
+ *     responses:
+ *       200:
+ *         description: Customer analytics data
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (not the business owner)
+ *       500:
+ *         description: Server error
+ */
+router.get(
+  "/business/:businessId/customers",
+  protect(["business"]),
+  isBusiness,
+  getCustomerAnalytics as unknown as RequestHandler
+);
+
+/**
+ * @swagger
+ * /api/analytics/business/{businessId}/performance:
+ *   get:
+ *     summary: Get performance metrics for a business
+ *     tags: [Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: businessId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Business ID
+ *     responses:
+ *       200:
+ *         description: Performance metrics data
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (not the business owner)
+ *       500:
+ *         description: Server error
+ */
+router.get(
+  "/business/:businessId/performance",
+  protect(["business"]),
+  isBusiness,
+  getPerformanceMetrics as unknown as RequestHandler
 );
 
 export default router;

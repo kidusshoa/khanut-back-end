@@ -7,6 +7,103 @@ import { User } from "../models/user";
 import { Service } from "../models/service";
 import mongoose from "mongoose";
 
+// Helper function to get date ranges based on period
+const getDateRanges = (period: string) => {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay()); // Sunday
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6); // Saturday
+
+  const startOfLastWeek = new Date(startOfWeek);
+  startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+  const endOfLastWeek = new Date(endOfWeek);
+  endOfLastWeek.setDate(endOfLastWeek.getDate() - 7);
+
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const endOfYear = new Date(now.getFullYear(), 11, 31);
+
+  const startOfLastYear = new Date(now.getFullYear() - 1, 0, 1);
+  const endOfLastYear = new Date(now.getFullYear() - 1, 11, 31);
+
+  return {
+    today: {
+      start: today,
+      end: now,
+    },
+    yesterday: {
+      start: yesterday,
+      end: today,
+    },
+    thisWeek: {
+      start: startOfWeek,
+      end: endOfWeek,
+    },
+    lastWeek: {
+      start: startOfLastWeek,
+      end: endOfLastWeek,
+    },
+    thisMonth: {
+      start: startOfMonth,
+      end: endOfMonth,
+    },
+    lastMonth: {
+      start: startOfLastMonth,
+      end: endOfLastMonth,
+    },
+    thisYear: {
+      start: startOfYear,
+      end: endOfYear,
+    },
+    lastYear: {
+      start: startOfLastYear,
+      end: endOfLastYear,
+    },
+  };
+};
+
+// Helper function to return empty analytics data
+const getEmptyAnalyticsData = () => {
+  return {
+    revenue: {
+      total: 0,
+      today: 0,
+      thisWeek: 0,
+      thisMonth: 0,
+    },
+    orders: {
+      total: 0,
+      today: 0,
+      thisWeek: 0,
+      thisMonth: 0,
+      pending: 0,
+      completed: 0,
+    },
+    customers: {
+      total: 0,
+      new: 0,
+      returning: 0,
+    },
+    appointments: {
+      total: 0,
+      today: 0,
+      thisWeek: 0,
+      upcoming: 0,
+      completed: 0,
+    },
+  };
+};
+
 /**
  * Get dashboard statistics for a business
  */
@@ -593,6 +690,308 @@ export const getRecentOrders = async (req: AuthRequest, res: Response) => {
 };
 
 /**
+ * Get comprehensive analytics data for a business
+ */
+export const getComprehensiveAnalytics = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    const { businessId } = req.params;
+    const { period = "month" } = req.query;
+
+    // Verify business exists and user has access
+    const business = await Business.findById(businessId);
+    if (!business) {
+      // Return empty analytics data instead of 404 for new businesses
+      return res.status(200).json(getEmptyAnalyticsData());
+    }
+
+    // Check if user owns this business
+    if (
+      req.user.role === "business" &&
+      business.ownerId.toString() !== req.user.id
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to access this business" });
+    }
+
+    // Get date ranges based on the requested period
+    const dateRanges = getDateRanges(period as string);
+
+    // Get all orders for the business
+    const allOrders = await Order.find({
+      businessId,
+      status: {
+        $in: [
+          "payment_received",
+          "processing",
+          "shipped",
+          "delivered",
+          "pending_payment",
+        ],
+      },
+    });
+
+    // Get orders for today
+    const todayOrders = allOrders.filter(
+      (order) =>
+        order.createdAt >= dateRanges.today.start &&
+        order.createdAt <= dateRanges.today.end
+    );
+
+    // Get orders for this week
+    const thisWeekOrders = allOrders.filter(
+      (order) =>
+        order.createdAt >= dateRanges.thisWeek.start &&
+        order.createdAt <= dateRanges.thisWeek.end
+    );
+
+    // Get orders for this month
+    const thisMonthOrders = allOrders.filter(
+      (order) =>
+        order.createdAt >= dateRanges.thisMonth.start &&
+        order.createdAt <= dateRanges.thisMonth.end
+    );
+
+    // Calculate revenue data
+    const revenueData = {
+      total: allOrders.reduce((sum, order) => sum + order.totalAmount, 0),
+      today: todayOrders.reduce((sum, order) => sum + order.totalAmount, 0),
+      thisWeek: thisWeekOrders.reduce(
+        (sum, order) => sum + order.totalAmount,
+        0
+      ),
+      thisMonth: thisMonthOrders.reduce(
+        (sum, order) => sum + order.totalAmount,
+        0
+      ),
+    };
+
+    // Get all appointments for the business
+    const allAppointments = await Appointment.find({ businessId });
+
+    // Get current date
+    const currentDate = new Date();
+
+    // Get appointments for today
+    const todayAppointments = allAppointments.filter((appointment) => {
+      const appointmentDate = new Date(appointment.date);
+      return (
+        appointmentDate.getFullYear() === currentDate.getFullYear() &&
+        appointmentDate.getMonth() === currentDate.getMonth() &&
+        appointmentDate.getDate() === currentDate.getDate()
+      );
+    });
+
+    // Get appointments for this week
+    const thisWeekAppointments = allAppointments.filter((appointment) => {
+      const appointmentDate = new Date(appointment.date);
+      return (
+        appointmentDate >= dateRanges.thisWeek.start &&
+        appointmentDate <= dateRanges.thisWeek.end
+      );
+    });
+
+    // Get upcoming appointments
+    const upcomingAppointments = allAppointments.filter((appointment) => {
+      const appointmentDate = new Date(appointment.date);
+      return (
+        appointmentDate >= currentDate && appointment.status !== "completed"
+      );
+    });
+
+    // Get completed appointments
+    const completedAppointments = allAppointments.filter(
+      (appointment) => appointment.status === "completed"
+    );
+
+    // Calculate appointments data
+    const appointmentsData = {
+      total: allAppointments.length,
+      today: todayAppointments.length,
+      thisWeek: thisWeekAppointments.length,
+      upcoming: upcomingAppointments.length,
+      completed: completedAppointments.length,
+    };
+
+    // Get pending orders
+    const pendingOrders = allOrders.filter(
+      (order) =>
+        order.status === "pending_payment" || order.status === "processing"
+    );
+
+    // Get completed orders
+    const completedOrders = allOrders.filter(
+      (order) => order.status === "delivered"
+    );
+
+    // Calculate orders data
+    const ordersData = {
+      total: allOrders.length,
+      today: todayOrders.length,
+      thisWeek: thisWeekOrders.length,
+      thisMonth: thisMonthOrders.length,
+      pending: pendingOrders.length,
+      completed: completedOrders.length,
+    };
+
+    // Get all unique customer IDs from orders and appointments
+    const customerIds = new Set([
+      ...allOrders.map((order) => order.customerId.toString()),
+      ...allAppointments.map((appointment) =>
+        appointment.customerId.toString()
+      ),
+    ]);
+
+    // Get new customers (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(currentDate.getDate() - 30);
+
+    const recentOrders = allOrders.filter(
+      (order) => order.createdAt >= thirtyDaysAgo
+    );
+    const recentAppointments = allAppointments.filter(
+      (appointment) => appointment.createdAt >= thirtyDaysAgo
+    );
+
+    const recentCustomerIds = new Set([
+      ...recentOrders.map((order) => order.customerId.toString()),
+      ...recentAppointments.map((appointment) =>
+        appointment.customerId.toString()
+      ),
+    ]);
+
+    // Calculate returning customers (total - new)
+    const totalCustomers = customerIds.size;
+    const newCustomers = recentCustomerIds.size;
+    const returningCustomers = Math.max(0, totalCustomers - newCustomers);
+
+    // Calculate customers data
+    const customersData = {
+      total: totalCustomers,
+      new: newCustomers,
+      returning: returningCustomers,
+    };
+
+    // Combine all data into a single response
+    const analyticsData = {
+      revenue: revenueData,
+      orders: ordersData,
+      customers: customersData,
+      appointments: appointmentsData,
+    };
+
+    return res.status(200).json(analyticsData);
+  } catch (error) {
+    console.error("❌ Get comprehensive analytics error:", error);
+    return res
+      .status(500)
+      .json({ message: "Failed to get comprehensive analytics data" });
+  }
+};
+
+/**
+ * Get customer analytics data for a business
+ */
+export const getCustomerAnalytics = async (req: AuthRequest, res: Response) => {
+  try {
+    const { businessId } = req.params;
+
+    // Verify business exists and user has access
+    const business = await Business.findById(businessId);
+    if (!business) {
+      // Return empty customer analytics data instead of 404 for new businesses
+      return res.status(200).json({
+        total: 0,
+        new: 0,
+        returning: 0,
+        sources: [],
+        retention: [],
+      });
+    }
+
+    // Check if user owns this business
+    if (
+      req.user.role === "business" &&
+      business.ownerId.toString() !== req.user.id
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to access this business" });
+    }
+
+    // Get all orders and appointments for the business
+    const allOrders = await Order.find({ businessId });
+    const allAppointments = await Appointment.find({ businessId });
+
+    // Get all unique customer IDs from orders and appointments
+    const customerIds = new Set([
+      ...allOrders.map((order) => order.customerId.toString()),
+      ...allAppointments.map((appointment) =>
+        appointment.customerId.toString()
+      ),
+    ]);
+
+    // Get current date
+    const currentDate = new Date();
+
+    // Get new customers (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(currentDate.getDate() - 30);
+
+    const recentOrders = allOrders.filter(
+      (order) => order.createdAt >= thirtyDaysAgo
+    );
+    const recentAppointments = allAppointments.filter(
+      (appointment) => appointment.createdAt >= thirtyDaysAgo
+    );
+
+    const recentCustomerIds = new Set([
+      ...recentOrders.map((order) => order.customerId.toString()),
+      ...recentAppointments.map((appointment) =>
+        appointment.customerId.toString()
+      ),
+    ]);
+
+    // Calculate returning customers (total - new)
+    const totalCustomers = customerIds.size;
+    const newCustomers = recentCustomerIds.size;
+    const returningCustomers = Math.max(0, totalCustomers - newCustomers);
+
+    // Get customer sources (mock data for now)
+    const sources = [
+      { name: "Direct", value: Math.floor(totalCustomers * 0.4) },
+      { name: "Referral", value: Math.floor(totalCustomers * 0.3) },
+      { name: "Social Media", value: Math.floor(totalCustomers * 0.2) },
+      { name: "Search", value: Math.floor(totalCustomers * 0.1) },
+    ];
+
+    // Get customer retention data (mock data for now)
+    const retention = [
+      { name: "1-time", value: Math.floor(totalCustomers * 0.5) },
+      { name: "2-3 times", value: Math.floor(totalCustomers * 0.3) },
+      { name: "4-6 times", value: Math.floor(totalCustomers * 0.15) },
+      { name: "7+ times", value: Math.floor(totalCustomers * 0.05) },
+    ];
+
+    return res.status(200).json({
+      total: totalCustomers,
+      new: newCustomers,
+      returning: returningCustomers,
+      sources,
+      retention,
+    });
+  } catch (error) {
+    console.error("❌ Get customer analytics error:", error);
+    return res
+      .status(500)
+      .json({ message: "Failed to get customer analytics data" });
+  }
+};
+
+/**
  * Get upcoming appointments for a business
  */
 export const getUpcomingAppointments = async (
@@ -660,5 +1059,198 @@ export const getUpcomingAppointments = async (
     return res
       .status(500)
       .json({ message: "Failed to get upcoming appointments" });
+  }
+};
+
+/**
+ * Get performance metrics for a business
+ */
+export const getPerformanceMetrics = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    const { businessId } = req.params;
+
+    // Verify business exists and user has access
+    const business = await Business.findById(businessId);
+    if (!business) {
+      // Return empty performance metrics instead of 404 for new businesses
+      return res.status(200).json({
+        kpi: [
+          { subject: "Revenue", A: 50 },
+          { subject: "Orders", A: 50 },
+          { subject: "Customers", A: 50 },
+          { subject: "Retention", A: 50 },
+          { subject: "Satisfaction", A: 50 },
+          { subject: "Growth", A: 50 },
+        ],
+        goals: {
+          revenue: { target: 1000, current: 0 },
+          orders: { target: 10, current: 0 },
+          customers: { target: 20, current: 0 },
+        },
+      });
+    }
+
+    // Check if user owns this business
+    if (
+      req.user.role === "business" &&
+      business.ownerId.toString() !== req.user.id
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to access this business" });
+    }
+
+    // Get all orders and appointments for the business
+    const allOrders = await Order.find({
+      businessId,
+      status: {
+        $in: [
+          "payment_received",
+          "processing",
+          "shipped",
+          "delivered",
+          "pending_payment",
+        ],
+      },
+    });
+    const allAppointments = await Appointment.find({ businessId });
+
+    // Get current date
+    const currentDate = new Date();
+
+    // Get date 30 days ago
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(currentDate.getDate() - 30);
+
+    // Get date 60 days ago
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(currentDate.getDate() - 60);
+
+    // Get orders for current month
+    const currentMonthOrders = allOrders.filter(
+      (order) =>
+        order.createdAt >= thirtyDaysAgo && order.createdAt <= currentDate
+    );
+
+    // Get orders for previous month
+    const previousMonthOrders = allOrders.filter(
+      (order) =>
+        order.createdAt >= sixtyDaysAgo && order.createdAt <= thirtyDaysAgo
+    );
+
+    // Calculate revenue metrics
+    const currentMonthRevenue = currentMonthOrders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0
+    );
+    const previousMonthRevenue = previousMonthOrders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0
+    );
+    const totalRevenue = allOrders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0
+    );
+
+    // Calculate revenue score (0-100)
+    const revenueScore = Math.min(
+      100,
+      Math.max(10, (currentMonthRevenue / (totalRevenue || 1)) * 100)
+    );
+
+    // Calculate order metrics
+    const currentMonthOrderCount = currentMonthOrders.length;
+    const previousMonthOrderCount = previousMonthOrders.length;
+    const totalOrders = allOrders.length;
+
+    // Calculate order score (0-100)
+    const orderScore = Math.min(
+      100,
+      Math.max(10, (currentMonthOrderCount / (totalOrders || 1)) * 100)
+    );
+
+    // Get all unique customer IDs from orders and appointments
+    const customerIds = new Set([
+      ...allOrders.map((order) => order.customerId.toString()),
+      ...allAppointments.map((appointment) =>
+        appointment.customerId.toString()
+      ),
+    ]);
+
+    // Get new customers (last 30 days)
+    const recentOrders = allOrders.filter(
+      (order) => order.createdAt >= thirtyDaysAgo
+    );
+    const recentAppointments = allAppointments.filter(
+      (appointment) => appointment.createdAt >= thirtyDaysAgo
+    );
+
+    const recentCustomerIds = new Set([
+      ...recentOrders.map((order) => order.customerId.toString()),
+      ...recentAppointments.map((appointment) =>
+        appointment.customerId.toString()
+      ),
+    ]);
+
+    // Calculate customer metrics
+    const totalCustomers = customerIds.size;
+    const newCustomers = recentCustomerIds.size;
+
+    // Calculate customer score (0-100)
+    const customerScore = Math.min(
+      100,
+      Math.max(10, (newCustomers / (totalCustomers || 1)) * 100)
+    );
+
+    // Calculate retention score (mock data for now)
+    const retentionScore = Math.min(100, Math.max(10, 60 + Math.random() * 20));
+
+    // Calculate satisfaction score (mock data for now)
+    const satisfactionScore = Math.min(
+      100,
+      Math.max(10, 70 + Math.random() * 20)
+    );
+
+    // Calculate growth score (mock data for now)
+    const growthScore = Math.min(100, Math.max(10, 50 + Math.random() * 30));
+
+    // Create KPI data
+    const kpiData = [
+      { subject: "Revenue", A: Math.round(revenueScore) },
+      { subject: "Orders", A: Math.round(orderScore) },
+      { subject: "Customers", A: Math.round(customerScore) },
+      { subject: "Retention", A: Math.round(retentionScore) },
+      { subject: "Satisfaction", A: Math.round(satisfactionScore) },
+      { subject: "Growth", A: Math.round(growthScore) },
+    ];
+
+    // Create goals data (mock data for now)
+    const goalsData = {
+      revenue: {
+        target: Math.max(1000, Math.round(totalRevenue * 1.2)),
+        current: Math.round(totalRevenue),
+      },
+      orders: {
+        target: Math.max(10, Math.round(totalOrders * 1.2)),
+        current: totalOrders,
+      },
+      customers: {
+        target: Math.max(20, Math.round(totalCustomers * 1.2)),
+        current: totalCustomers,
+      },
+    };
+
+    return res.status(200).json({
+      kpi: kpiData,
+      goals: goalsData,
+    });
+  } catch (error) {
+    console.error("❌ Get performance metrics error:", error);
+    return res
+      .status(500)
+      .json({ message: "Failed to get performance metrics data" });
   }
 };

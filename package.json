@@ -15,10 +15,12 @@
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^6.4.17",
     "@types/winston": "^2.4.4",
+    "axios": "1.9.0",
     "backblaze-b2": "^1.7.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
     "chapa-nodejs": "^2.0.1",
+    "cookie": "0.7.2",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
@@ -53,6 +55,11 @@
     "typescript": "^5.5.2"
   },
   "resolutions": {
+    "cookie": "^0.7.2",
+    "axios": "^1.9.0"
+  },
+  "overrides": {
+    "axios": "^1.9.0",
     "cookie": "^0.7.2"
   }
 }

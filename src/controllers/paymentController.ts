@@ -366,32 +366,152 @@ export const getOrderPaymentStatus = async (
   }
 };
 
-// Get payment history for a customer
+// Get payment history for a customer with pagination and filtering
 export const getCustomerPayments = async (req: Request, res: Response) => {
   try {
     const { customerId } = req.params;
+    const {
+      page = "1",
+      limit = "10",
+      status,
+      startDate,
+      endDate,
+      sort = "createdAt",
+      order = "desc",
+    } = req.query;
 
-    const payments = await Payment.find({ customerId })
-      .populate("businessId", "name")
-      .sort({ createdAt: -1 });
+    // Convert page and limit to numbers
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const skip = (pageNum - 1) * limitNum;
 
-    return res.status(200).json(payments);
+    // Build query
+    const query: any = { customerId };
+
+    // Add status filter if provided
+    if (
+      status &&
+      ["pending", "completed", "failed", "refunded", "cancelled"].includes(
+        status as string
+      )
+    ) {
+      query.status = status;
+    }
+
+    // Add date range filter if provided
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) {
+        query.createdAt.$gte = new Date(startDate as string);
+      }
+      if (endDate) {
+        const endDateObj = new Date(endDate as string);
+        endDateObj.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = endDateObj;
+      }
+    }
+
+    // Determine sort order
+    const sortOrder = order === "asc" ? 1 : -1;
+    const sortOptions: any = {};
+    sortOptions[sort as string] = sortOrder;
+
+    // Execute query with pagination
+    const [payments, total] = await Promise.all([
+      Payment.find(query)
+        .populate("businessId", "name")
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(limitNum),
+      Payment.countDocuments(query),
+    ]);
+
+    return res.status(200).json({
+      transactions: payments,
+      pagination: {
+        totalItems: total,
+        currentPage: pageNum,
+        totalPages: Math.ceil(total / limitNum),
+        hasNextPage: pageNum < Math.ceil(total / limitNum),
+        hasPrevPage: pageNum > 1,
+      },
+    });
   } catch (error) {
     console.error("Error fetching customer payments:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
 
-// Get payment history for a business
+// Get payment history for a business with pagination and filtering
 export const getBusinessPayments = async (req: Request, res: Response) => {
   try {
     const { businessId } = req.params;
+    const {
+      page = "1",
+      limit = "10",
+      status,
+      startDate,
+      endDate,
+      sort = "createdAt",
+      order = "desc",
+    } = req.query;
 
-    const payments = await Payment.find({ businessId })
-      .populate("customerId", "name email")
-      .sort({ createdAt: -1 });
+    // Convert page and limit to numbers
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const skip = (pageNum - 1) * limitNum;
 
-    return res.status(200).json(payments);
+    // Build query
+    const query: any = { businessId };
+
+    // Add status filter if provided
+    if (
+      status &&
+      ["pending", "completed", "failed", "refunded", "cancelled"].includes(
+        status as string
+      )
+    ) {
+      query.status = status;
+    }
+
+    // Add date range filter if provided
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) {
+        query.createdAt.$gte = new Date(startDate as string);
+      }
+      if (endDate) {
+        const endDateObj = new Date(endDate as string);
+        endDateObj.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = endDateObj;
+      }
+    }
+
+    // Determine sort order
+    const sortOrder = order === "asc" ? 1 : -1;
+    const sortOptions: any = {};
+    sortOptions[sort as string] = sortOrder;
+
+    // Execute query with pagination
+    const [payments, total] = await Promise.all([
+      Payment.find(query)
+        .populate("customerId", "name email")
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(limitNum),
+      Payment.countDocuments(query),
+    ]);
+
+    return res.status(200).json({
+      transactions: payments,
+      pagination: {
+        totalItems: total,
+        currentPage: pageNum,
+        totalPages: Math.ceil(total / limitNum),
+        hasNextPage: pageNum < Math.ceil(total / limitNum),
+        hasPrevPage: pageNum > 1,
+      },
+    });
   } catch (error) {
     console.error("Error fetching business payments:", error);
     return res.status(500).json({ message: "Server error" });

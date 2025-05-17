@@ -251,7 +251,7 @@ router.post("/webhook", chapaWebhook);
  * @swagger
  * /api/payments/customer/{customerId}:
  *   get:
- *     summary: Get payment history for a customer
+ *     summary: Get payment history for a customer with pagination and filtering
  *     tags: [Payments]
  *     security:
  *       - bearerAuth: []
@@ -263,18 +263,79 @@ router.post("/webhook", chapaWebhook);
  *           type: string
  *         description: Customer ID
  *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of items per page
+ *       - in: query
  *         name: status
  *         schema:
  *           type: string
  *           enum: [pending, completed, failed, refunded, cancelled]
  *         description: Filter payments by status
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter payments by start date (YYYY-MM-DD)
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter payments by end date (YYYY-MM-DD)
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           default: createdAt
+ *         description: Field to sort by
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Sort order
  *     responses:
  *       200:
- *         description: List of payments for the customer
+ *         description: Paginated list of payments for the customer
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 transactions:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     totalItems:
+ *                       type: integer
+ *                     currentPage:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                     hasNextPage:
+ *                       type: boolean
+ *                     hasPrevPage:
+ *                       type: boolean
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Forbidden (not the customer)
+ *       500:
+ *         description: Server error
  */
 router.get(
   "/customer/:customerId",
@@ -287,7 +348,7 @@ router.get(
  * @swagger
  * /api/payments/business/{businessId}:
  *   get:
- *     summary: Get payment history for a business
+ *     summary: Get payment history for a business with pagination and filtering
  *     tags: [Payments]
  *     security:
  *       - bearerAuth: []
@@ -299,18 +360,79 @@ router.get(
  *           type: string
  *         description: Business ID
  *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of items per page
+ *       - in: query
  *         name: status
  *         schema:
  *           type: string
  *           enum: [pending, completed, failed, refunded, cancelled]
  *         description: Filter payments by status
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter payments by start date (YYYY-MM-DD)
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter payments by end date (YYYY-MM-DD)
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           default: createdAt
+ *         description: Field to sort by
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Sort order
  *     responses:
  *       200:
- *         description: List of payments for the business
+ *         description: Paginated list of payments for the business
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 transactions:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     totalItems:
+ *                       type: integer
+ *                     currentPage:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                     hasNextPage:
+ *                       type: boolean
+ *                     hasPrevPage:
+ *                       type: boolean
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Forbidden (not the business owner)
+ *       500:
+ *         description: Server error
  */
 router.get(
   "/business/:businessId",

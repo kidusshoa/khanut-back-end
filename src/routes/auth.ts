@@ -11,6 +11,7 @@ import {
   resetPassword,
   getUserRole,
 } from "../controllers/authController";
+import { rateLimiters } from "../middleware/rateLimiter";
 
 const router = Router();
 
@@ -212,6 +213,7 @@ router.post("/verify-2fa", verify2FA as (req: Request, res: Response) => void);
  */
 router.post(
   "/forgot-password",
+  rateLimiters.passwordReset,
   forgotPassword as (req: Request, res: Response) => void
 );
 
@@ -281,6 +283,7 @@ router.post(
  */
 router.post(
   "/reset-password",
+  rateLimiters.passwordReset,
   resetPassword as (req: Request, res: Response) => void
 );
 

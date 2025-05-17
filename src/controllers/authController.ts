@@ -6,6 +6,7 @@ import { User } from "../models/user";
 import { TokenBlacklist } from "../models/tokebBlacklist";
 import { send2FACode } from "../utils/send2FACode";
 import { sendResetEmail } from "../utils/sendResetEmail";
+import { authLogger, emailLogger } from "../utils/logger";
 
 export const refresh = async (req: Request, res: Response) => {
   const { token } = req.body;
@@ -223,8 +224,12 @@ export const register = async (req: Request, res: Response) => {
 export const forgotPassword = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
+    const clientIp = req.ip || "unknown";
+
+    authLogger.info("Password reset requested", { email, ip: clientIp });
 
     if (!email) {
+      authLogger.warn("Password reset attempt without email", { ip: clientIp });
       return res.status(400).json({ message: "Email is required" });
     }
 
@@ -232,6 +237,10 @@ export const forgotPassword = async (req: Request, res: Response) => {
     const user = await User.findOne({ email });
     if (!user) {
       // For security reasons, don't reveal that the email doesn't exist
+      authLogger.info("Password reset requested for non-existent email", {
+        email,
+        ip: clientIp,
+      });
       return res.status(200).json({
         message:
           "If an account with that email exists, a password reset link has been sent.",
@@ -246,17 +255,38 @@ export const forgotPassword = async (req: Request, res: Response) => {
     user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     await user.save();
+    authLogger.info("Password reset token generated", {
+      userId: user._id,
+      email,
+      tokenExpiry: user.resetPasswordExpires,
+    });
 
     // Send the reset email
     const userId = user._id as unknown as string;
-    await sendResetEmail(email, token, userId);
+    try {
+      await sendResetEmail(email, token, userId);
+      emailLogger.info("Password reset email sent", { userId, email });
+    } catch (emailError) {
+      emailLogger.error("Failed to send password reset email", {
+        userId,
+        email,
+        error: emailError,
+      });
+      // We don't want to expose email sending failures to the client
+      // Still return success to prevent email enumeration
+    }
 
     return res.status(200).json({
       message:
         "If an account with that email exists, a password reset link has been sent.",
     });
   } catch (error) {
-    console.error("Forgot password error:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    authLogger.error("Forgot password error", {
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return res.status(500).json({ message: "Server error" });
   }
 };
@@ -268,8 +298,16 @@ export const forgotPassword = async (req: Request, res: Response) => {
 export const validateResetToken = async (req: Request, res: Response) => {
   try {
     const { token, userId } = req.body;
+    const clientIp = req.ip || "unknown";
+
+    authLogger.info("Reset token validation attempt", { userId, ip: clientIp });
 
     if (!token || !userId) {
+      authLogger.warn("Reset token validation missing parameters", {
+        hasToken: !!token,
+        hasUserId: !!userId,
+        ip: clientIp,
+      });
       return res
         .status(400)
         .json({ message: "Token and user ID are required" });
@@ -283,12 +321,26 @@ export const validateResetToken = async (req: Request, res: Response) => {
     });
 
     if (!user) {
+      authLogger.warn("Invalid or expired reset token", {
+        userId,
+        ip: clientIp,
+        tokenExists: !!token,
+      });
       return res.status(400).json({ message: "Invalid or expired token" });
     }
 
+    authLogger.info("Reset token validated successfully", {
+      userId,
+      email: user.email,
+    });
     return res.status(200).json({ valid: true });
   } catch (error) {
-    console.error("Validate reset token error:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    authLogger.error("Validate reset token error", {
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return res.status(500).json({ message: "Server error" });
   }
 };
@@ -300,8 +352,17 @@ export const validateResetToken = async (req: Request, res: Response) => {
 export const resetPassword = async (req: Request, res: Response) => {
   try {
     const { token, userId, password } = req.body;
+    const clientIp = req.ip || "unknown";
+
+    authLogger.info("Password reset attempt", { userId, ip: clientIp });
 
     if (!token || !userId || !password) {
+      authLogger.warn("Password reset missing parameters", {
+        hasToken: !!token,
+        hasUserId: !!userId,
+        hasPassword: !!password,
+        ip: clientIp,
+      });
       return res
         .status(400)
         .json({ message: "Token, user ID, and password are required" });
@@ -315,6 +376,11 @@ export const resetPassword = async (req: Request, res: Response) => {
     });
 
     if (!user) {
+      authLogger.warn("Invalid or expired token for password reset", {
+        userId,
+        ip: clientIp,
+        tokenExists: !!token,
+      });
       return res.status(400).json({ message: "Invalid or expired token" });
     }
 
@@ -327,11 +393,22 @@ export const resetPassword = async (req: Request, res: Response) => {
 
     await user.save();
 
+    authLogger.info("Password reset successful", {
+      userId,
+      email: user.email,
+      ip: clientIp,
+    });
+
     return res
       .status(200)
       .json({ message: "Password has been reset successfully" });
   } catch (error) {
-    console.error("Reset password error:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    authLogger.error("Reset password error", {
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return res.status(500).json({ message: "Server error" });
   }
 };

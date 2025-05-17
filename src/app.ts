@@ -1,6 +1,7 @@
 import express from "express";
 import { corsMiddleware } from "./config/cors";
 import cors from "cors";
+import { requestLogger } from "./utils/logger";
 import adminRoutes from "./routes/admin";
 import authRoutes from "./routes/auth";
 import adminBusinessRoutes from "./routes/adminBusiness";
@@ -46,6 +47,7 @@ import { swaggerSpec } from "./config/swagger";
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(requestLogger);
 
 // Enable preflight requests for all routes
 app.options("*", corsMiddleware);

@@ -53,13 +53,5 @@
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.2"
-  },
-  "resolutions": {
-    "cookie": "^0.7.2",
-    "axios": "^1.9.0"
-  },
-  "overrides": {
-    "axios": "^1.9.0",
-    "cookie": "^0.7.2"
   }
 }

@@ -3,6 +3,7 @@ import { AuthRequest } from "../types/express";
 import { Payment } from "../models/payment";
 import { Order } from "../models/order";
 import { Appointment } from "../models/appointment";
+import { PlatformFee } from "../models/platformFee";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import {
@@ -222,10 +223,36 @@ export const verifyPaymentStatus = async (req: Request, res: Response) => {
         await Order.findByIdAndUpdate(payment.referenceId, {
           status: "payment_received",
         });
+
+        // Calculate and save platform fee (5%)
+        const feePercentage = 5;
+        const feeAmount = (payment.amount * feePercentage) / 100;
+
+        await new PlatformFee({
+          paymentId: payment._id,
+          orderId: payment.referenceId,
+          businessId: payment.businessId,
+          originalAmount: payment.amount,
+          feePercentage: feePercentage,
+          feeAmount: feeAmount,
+        }).save();
       } else if (payment.paymentType === "appointment") {
         await Appointment.findByIdAndUpdate(payment.referenceId, {
           status: "confirmed",
         });
+
+        // Calculate and save platform fee (5%)
+        const feePercentage = 5;
+        const feeAmount = (payment.amount * feePercentage) / 100;
+
+        await new PlatformFee({
+          paymentId: payment._id,
+          appointmentId: payment.referenceId,
+          businessId: payment.businessId,
+          originalAmount: payment.amount,
+          feePercentage: feePercentage,
+          feeAmount: feeAmount,
+        }).save();
       }
     }
 
@@ -273,10 +300,48 @@ export const chapaWebhook = async (req: Request, res: Response) => {
           await Order.findByIdAndUpdate(payment.referenceId, {
             status: "payment_received",
           });
+
+          // Calculate and save platform fee (5%)
+          const feePercentage = 5;
+          const feeAmount = (payment.amount * feePercentage) / 100;
+
+          // Check if platform fee already exists for this payment
+          const existingFee = await PlatformFee.findOne({
+            paymentId: payment._id,
+          });
+          if (!existingFee) {
+            await new PlatformFee({
+              paymentId: payment._id,
+              orderId: payment.referenceId,
+              businessId: payment.businessId,
+              originalAmount: payment.amount,
+              feePercentage: feePercentage,
+              feeAmount: feeAmount,
+            }).save();
+          }
         } else if (payment.paymentType === "appointment") {
           await Appointment.findByIdAndUpdate(payment.referenceId, {
             status: "confirmed",
           });
+
+          // Calculate and save platform fee (5%)
+          const feePercentage = 5;
+          const feeAmount = (payment.amount * feePercentage) / 100;
+
+          // Check if platform fee already exists for this payment
+          const existingFee = await PlatformFee.findOne({
+            paymentId: payment._id,
+          });
+          if (!existingFee) {
+            await new PlatformFee({
+              paymentId: payment._id,
+              appointmentId: payment.referenceId,
+              businessId: payment.businessId,
+              originalAmount: payment.amount,
+              feePercentage: feePercentage,
+              feeAmount: feeAmount,
+            }).save();
+          }
         }
       }
     }

@@ -10,6 +10,7 @@ import adminReviewRoutes from "./routes/adminReview";
 import adminReportRoutes from "./routes/adminReport";
 import adminSettingRoutes from "./routes/adminSetting";
 import adminRecommendationRoutes from "./routes/adminRecommendation";
+import adminRevenueRoutes from "./routes/adminRevenue";
 import webhookRoutes from "./routes/webhook";
 import customerHomeRoutes from "./routes/customerHome";
 import customerDashboardRoutes from "./routes/customerDashboard";
@@ -63,6 +64,7 @@ app.use("/api/admin/reviews", adminReviewRoutes);
 app.use("/api/admin/reports", adminReportRoutes);
 app.use("/api/admin/settings", adminSettingRoutes);
 app.use("/api/admin/recommendations", adminRecommendationRoutes);
+app.use("/api/admin", adminRevenueRoutes);
 app.use("/api/webhook", webhookRoutes);
 
 // Auth routes

@@ -60,6 +60,24 @@ export const initializeOrderPayment = async (req: Request, res: Response) => {
     const customer = order.customerId as any;
     const business = order.businessId as any;
 
+    // Ensure we have the business ID as a string
+    const businessId =
+      typeof business === "object" && business._id
+        ? business._id.toString()
+        : business.toString();
+
+    // Ensure we have the business name
+    const businessName =
+      typeof business === "object" && business.name
+        ? business.name
+        : "Business";
+
+    // Ensure we have the customer ID as a string
+    const customerId =
+      typeof customer === "object" && customer._id
+        ? customer._id.toString()
+        : customer.toString();
+
     const chapaPayload = {
       amount: order.totalAmount.toString(),
       currency: "ETB",
@@ -68,10 +86,16 @@ export const initializeOrderPayment = async (req: Request, res: Response) => {
       last_name: customer.name.split(" ").slice(1).join(" "),
       tx_ref: txRef,
       callback_url: `${process.env.FRONTEND_URL}/payment/callback`,
-      return_url: `${process.env.FRONTEND_URL}/customer/${customer._id}/orders/${order._id}`,
+      return_url: `${process.env.FRONTEND_URL}/customer/${customerId}/orders/${order._id}`,
       customization: {
-        title: `Payment for order at ${business.name}`,
+        title: `Payment for order at ${businessName}`,
         description: `Order #${order._id}`,
+      },
+      // Add metadata to ensure we have the correct IDs
+      meta: {
+        businessId: businessId,
+        customerId: customerId,
+        orderId: order._id ? order._id.toString() : "",
       },
     };
 
@@ -149,6 +173,27 @@ export const initializeAppointmentPayment = async (
     const customer = appointment.customerId as any;
     const business = appointment.businessId as any;
 
+    // Ensure we have the business ID as a string
+    const businessId =
+      typeof business === "object" && business._id
+        ? business._id.toString()
+        : business.toString();
+
+    // Ensure we have the business name
+    const businessName =
+      typeof business === "object" && business.name
+        ? business.name
+        : "Business";
+
+    // Ensure we have the customer ID as a string
+    const customerId =
+      typeof customer === "object" && customer._id
+        ? customer._id.toString()
+        : customer.toString();
+
+    // Ensure we have the appointment ID as a string
+    const appointmentIdStr = appointment._id ? appointment._id.toString() : "";
+
     const chapaPayload = {
       amount: service.price.toString(),
       currency: "ETB",
@@ -157,10 +202,16 @@ export const initializeAppointmentPayment = async (
       last_name: customer.name.split(" ").slice(1).join(" "),
       tx_ref: txRef,
       callback_url: `${process.env.FRONTEND_URL}/payment/callback`,
-      return_url: `${process.env.FRONTEND_URL}/customer/${customer._id}/appointments/${appointment._id}`,
+      return_url: `${process.env.FRONTEND_URL}/customer/${customerId}/appointments/${appointmentIdStr}`,
       customization: {
-        title: `Payment for appointment at ${business.name}`,
+        title: `Payment for appointment at ${businessName}`,
         description: `Service: ${service.name}`,
+      },
+      // Add metadata to ensure we have the correct IDs
+      meta: {
+        businessId: businessId,
+        customerId: customerId,
+        appointmentId: appointmentIdStr,
       },
     };
 

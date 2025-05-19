@@ -170,6 +170,8 @@ export const createAppointment = async (req: Request, res: Response) => {
       endTime,
       notes,
       status: "pending",
+      paymentStatus: "unpaid",
+      price: service.price || 0,
     });
 
     await newAppointment.save();

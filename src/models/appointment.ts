@@ -6,6 +6,8 @@ export type AppointmentStatus =
   | "cancelled"
   | "completed";
 
+export type PaymentStatus = "unpaid" | "paid" | "refunded" | "failed";
+
 export interface IAppointment extends Document {
   serviceId: mongoose.Types.ObjectId;
   businessId: mongoose.Types.ObjectId;
@@ -15,6 +17,9 @@ export interface IAppointment extends Document {
   startTime: string;
   endTime: string;
   status: AppointmentStatus;
+  paymentStatus: PaymentStatus;
+  paymentId?: mongoose.Types.ObjectId;
+  price: number;
   notes?: string;
   isRecurring?: boolean;
   recurringId?: mongoose.Types.ObjectId;
@@ -59,6 +64,19 @@ const AppointmentSchema: Schema = new Schema(
       type: String,
       enum: ["pending", "confirmed", "cancelled", "completed"],
       default: "pending",
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["unpaid", "paid", "refunded", "failed"],
+      default: "unpaid",
+    },
+    paymentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Payment",
+    },
+    price: {
+      type: Number,
+      default: 0,
     },
     notes: {
       type: String,

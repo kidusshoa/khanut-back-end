@@ -239,6 +239,8 @@ export const verifyPaymentStatus = async (req: Request, res: Response) => {
       } else if (payment.paymentType === "appointment") {
         await Appointment.findByIdAndUpdate(payment.referenceId, {
           status: "confirmed",
+          paymentStatus: "paid",
+          paymentId: payment._id,
         });
 
         // Calculate and save platform fee (5%)
@@ -322,6 +324,8 @@ export const chapaWebhook = async (req: Request, res: Response) => {
         } else if (payment.paymentType === "appointment") {
           await Appointment.findByIdAndUpdate(payment.referenceId, {
             status: "confirmed",
+            paymentStatus: "paid",
+            paymentId: payment._id,
           });
 
           // Calculate and save platform fee (5%)

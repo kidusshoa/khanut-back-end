@@ -81,23 +81,40 @@ export const getCustomerOrders = async (req: Request, res: Response) => {
     // Populate service details for each order item
     const populatedOrders = await Promise.all(
       orders.map(async (order) => {
-        const orderObj = order.toObject();
+        try {
+          const orderObj = order.toObject();
 
-        const itemsWithDetails = await Promise.all(
-          orderObj.items.map(async (item: any) => {
-            const service = await Service.findById(item.serviceId);
-            return {
-              ...item,
-              serviceName: service?.name,
-              serviceDescription: service?.description,
-            };
-          })
-        );
+          const itemsWithDetails = await Promise.all(
+            orderObj.items.map(async (item: any) => {
+              try {
+                const service = await Service.findById(item.serviceId);
+                return {
+                  ...item,
+                  serviceName: service?.name || "Unknown Service",
+                  serviceDescription: service?.description || "",
+                };
+              } catch (itemError) {
+                console.error(
+                  `Error fetching service details for item: ${item.serviceId}`,
+                  itemError
+                );
+                return {
+                  ...item,
+                  serviceName: "Unknown Service",
+                  serviceDescription: "",
+                };
+              }
+            })
+          );
 
-        return {
-          ...orderObj,
-          items: itemsWithDetails,
-        };
+          return {
+            ...orderObj,
+            items: itemsWithDetails,
+          };
+        } catch (orderError) {
+          console.error(`Error processing order: ${order._id}`, orderError);
+          return order.toObject(); // Return the order without populated items
+        }
       })
     );
 
@@ -113,6 +130,13 @@ export const getOrderById = async (req: Request, res: Response) => {
   try {
     const { orderId } = req.params;
 
+    // Check if orderId is a valid MongoDB ObjectId
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(orderId);
+    if (!isValidObjectId) {
+      console.log(`Invalid ObjectId format for orderId: ${orderId}`);
+      return res.status(404).json({ message: "Order not found" });
+    }
+
     const order = await Order.findById(orderId)
       .populate("customerId", "name email")
       .populate("businessId", "name");
@@ -125,12 +149,24 @@ export const getOrderById = async (req: Request, res: Response) => {
     const orderObj = order.toObject();
     const itemsWithDetails = await Promise.all(
       orderObj.items.map(async (item: any) => {
-        const service = await Service.findById(item.serviceId);
-        return {
-          ...item,
-          serviceName: service?.name,
-          serviceDescription: service?.description,
-        };
+        try {
+          const service = await Service.findById(item.serviceId);
+          return {
+            ...item,
+            serviceName: service?.name || "Unknown Service",
+            serviceDescription: service?.description || "",
+          };
+        } catch (itemError) {
+          console.error(
+            `Error fetching service details for item: ${item.serviceId}`,
+            itemError
+          );
+          return {
+            ...item,
+            serviceName: "Unknown Service",
+            serviceDescription: "",
+          };
+        }
       })
     );
 

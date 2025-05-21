@@ -5,8 +5,12 @@ import {
   getRecommendationHealth,
   getRecommendationStats,
 } from "../controllers/adminRecommendationController";
+import stagedRecommendationsRouter from "./adminStagedRecommendations";
 
 const router = express.Router();
+
+// Mount staged recommendations routes
+router.use("/staged", stagedRecommendationsRouter);
 
 /**
  * @swagger

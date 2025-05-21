@@ -6,6 +6,7 @@ import { Business } from "../models/business";
 import { Service } from "../models/service";
 import { User } from "../models/user";
 import { AuthRequest } from "../middleware/auth";
+import { stagedRecommendationsService } from "../services/stagedRecommendations";
 
 /**
  * @desc    Get customer dashboard statistics
@@ -82,45 +83,42 @@ export const getRecommendedBusinesses = async (
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    let recommendedBusinesses = [];
+    let recommendedBusinesses: any[] = [];
     const limitNum = parseInt(limit as string) || 4;
+    let primaryRecommendationsAttempted = false;
+    let primaryRecommendationsFound = false;
 
-    // If recommendation engine is not available or fails, fall back to popular businesses
+    // --- Primary Recommendation Logic --- 
     try {
-      // This would be the call to your recommendation engine
-      // For now, we'll just get some random businesses as a placeholder
+      primaryRecommendationsAttempted = true;
+      console.log(`Attempting primary recommendations for customer ${customerId} using method: ${method}`);
+      // This would be the call to your recommendation engine (e.g., "Esti")
+      // For now, we'll use the existing placeholder logic
 
-      // Different recommendation methods
       if (method === "collaborative") {
         // Collaborative filtering based recommendations would go here
-        // For now, just get some random businesses
         recommendedBusinesses = await Business.find({ status: "active" })
           .sort({ rating: -1 })
           .limit(limitNum)
           .select("_id name description logo coverImage category rating");
-
-        // Add a mock prediction score
-        recommendedBusinesses = recommendedBusinesses.map((business) => ({
-          ...business.toObject(),
-          predictionScore: (Math.random() * 2 + 3).toFixed(1), // Random score between 3 and 5
-          recommendationMethod: "collaborative",
-        }));
+        if (recommendedBusinesses.length > 0) {
+            recommendedBusinesses = recommendedBusinesses.map((business) => ({
+              ...business.toObject(),
+              predictionScore: (Math.random() * 2 + 3).toFixed(1), // Random score between 3 and 5
+              recommendationMethod: "collaborative",
+            }));
+            primaryRecommendationsFound = true;
+        }
       } else if (method === "content") {
         // Content-based recommendations would go here
-        // For now, just get businesses in categories the user has interacted with
-
-        // Get user's favorite businesses
         const favorites = await Favorite.find({ customerId }).populate(
           "businessId"
         );
-
-        // Extract categories
         const categories = favorites
           .map((fav) => (fav.businessId as any).category)
           .filter(Boolean);
 
         if (categories.length > 0) {
-          // Find businesses in those categories
           recommendedBusinesses = await Business.find({
             status: "active",
             category: { $in: categories },
@@ -128,22 +126,21 @@ export const getRecommendedBusinesses = async (
             .limit(limitNum)
             .select("_id name description logo coverImage category rating");
         } else {
-          // Fallback to new businesses
+          // Fallback to new businesses if no favorites/categories
           recommendedBusinesses = await Business.find({ status: "active" })
             .sort({ createdAt: -1 })
             .limit(limitNum)
             .select("_id name description logo coverImage category rating");
         }
-
-        // Add a mock prediction score
-        recommendedBusinesses = recommendedBusinesses.map((business) => ({
-          ...business.toObject(),
-          predictionScore: (Math.random() * 2 + 3).toFixed(1), // Random score between 3 and 5
-          recommendationMethod: "content",
-        }));
-      } else {
-        // Hybrid approach (default)
-        // For now, just get a mix of popular and new businesses
+        if (recommendedBusinesses.length > 0) {
+            recommendedBusinesses = recommendedBusinesses.map((business) => ({
+              ...business.toObject(),
+              predictionScore: (Math.random() * 2 + 3).toFixed(1),
+              recommendationMethod: "content",
+            }));
+            primaryRecommendationsFound = true;
+        }
+      } else { // Hybrid approach (default)
         const popularBusinesses = await Business.find({ status: "active" })
           .sort({ rating: -1 })
           .limit(Math.ceil(limitNum / 2))
@@ -155,25 +152,59 @@ export const getRecommendedBusinesses = async (
           .select("_id name description logo coverImage category rating");
 
         recommendedBusinesses = [...popularBusinesses, ...newBusinesses];
-
-        // Add a mock prediction score
-        recommendedBusinesses = recommendedBusinesses.map((business) => ({
-          ...business.toObject(),
-          predictionScore: (Math.random() * 2 + 3).toFixed(1), // Random score between 3 and 5
-          recommendationMethod: "hybrid",
-        }));
+        if (recommendedBusinesses.length > 0) {
+            recommendedBusinesses = recommendedBusinesses.map((business) => ({
+              ...business.toObject(),
+              predictionScore: (Math.random() * 2 + 3).toFixed(1),
+              recommendationMethod: "hybrid",
+            }));
+            primaryRecommendationsFound = true;
+        }
       }
-    } catch (error) {
-      console.error("Recommendation engine error:", error);
 
-      // Fallback to popular businesses
+      if (primaryRecommendationsFound) {
+        console.log(`Found ${recommendedBusinesses.length} primary recommendations for customer ${customerId}`);
+        return res.status(200).json({ recommendations: recommendedBusinesses });
+      }
+
+    } catch (error) {
+      console.error("Primary recommendation engine error:", error);
+      // Proceed to staged/fallback logic if primary fails
+    }
+
+    // --- Fallback to Staged Recommendations --- 
+    if (!primaryRecommendationsFound) {
+      console.log(`Primary recommendations not found or failed for ${customerId}. Attempting staged recommendations.`);
+      if (stagedRecommendationsService.hasCustomerStagedRecommendations(customerId)) {
+        console.log(`Using staged recommendations for customer ${customerId}`);
+        const stagedRecs = await stagedRecommendationsService.getStagedRecommendations(
+            customerId,
+            limitNum
+          );
+        if (stagedRecs.length > 0) {
+          return res.status(200).json({ recommendations: stagedRecs }); // Note: stagedRecs already has 'recommendationMethod'
+        }
+      }
+    }
+
+    // --- Final Fallback (e.g., Top Rated if all else fails) --- 
+    if (recommendedBusinesses.length === 0) {
+      console.log(`No primary or staged recommendations found for ${customerId}. Falling back to top-rated.`);
       recommendedBusinesses = await Business.find({ status: "active" })
         .sort({ rating: -1 })
         .limit(limitNum)
         .select("_id name description logo coverImage category rating");
+      
+      // Add a generic recommendation method if not already present
+      recommendedBusinesses = recommendedBusinesses.map((business) => ({
+        ...business.toObject(),
+        predictionScore: (business.toObject().rating || (Math.random()*2+3)).toFixed(1),
+        recommendationMethod: "general-fallback",
+      }));
     }
 
     res.status(200).json({ recommendations: recommendedBusinesses });
+
   } catch (error) {
     console.error("Error fetching recommended businesses:", error);
     res.status(500).json({ message: "Server error" });

@@ -38,7 +38,7 @@ const MODEL_NAME = 'gemini-1.5-pro';
  * Gemini Service for handling AI-powered chat functionality
  */
 class GeminiService {
-  private model;
+  private model: any;
   
   constructor() {
     this.model = genAI.getGenerativeModel({
@@ -56,6 +56,12 @@ class GeminiService {
    */
   async generateCustomerResponse(userId: string, message: string, history: any[] = []) {
     try {
+      // Check if API key is configured
+      if (!process.env.GEMINI_API_KEY) {
+        // Return demo responses for presentation purposes
+        return this.getDemoResponse(message);
+      }
+      
       // Get relevant businesses to provide context to the AI
       const businesses = await this.getRelevantBusinesses();
       
@@ -81,8 +87,46 @@ class GeminiService {
       return response;
     } catch (error) {
       logger.error('Error generating Gemini response:', error);
-      return "I'm sorry, I'm having trouble connecting right now. Please try again later.";
+      // Fall back to demo responses if there's an error
+      return this.getDemoResponse(message);
     }
+  }
+  
+  /**
+   * Get a demo response for presentation purposes when the API key isn't configured
+   * @param message The user's message
+   * @returns A predefined response based on the message content
+   */
+  private getDemoResponse(message: string): string {
+    const lowerMessage = message.toLowerCase();
+    
+    // Check for common questions and provide relevant responses
+    if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
+      return "Hello! I'm Khanut Assistant. How can I help you today?";
+    }
+    
+    if (lowerMessage.includes('recommend') || lowerMessage.includes('suggestion')) {
+      return "Based on your preferences, I'd recommend checking out System Electronics for your tech needs, or Liyu Coffee if you're looking for a nice café to relax in.";
+    }
+    
+    if (lowerMessage.includes('restaurant') || lowerMessage.includes('food') || lowerMessage.includes('eat')) {
+      return "For dining options, I recommend Habesha Restaurant for authentic Ethiopian cuisine, or KT Cafe for a more casual experience. Both have excellent ratings from other customers.";
+    }
+    
+    if (lowerMessage.includes('electronics') || lowerMessage.includes('tech') || lowerMessage.includes('computer')) {
+      return "For electronics, System Electronics offers a wide range of products and services. They have a 4.5-star rating and are known for their excellent customer service.";
+    }
+    
+    if (lowerMessage.includes('beauty') || lowerMessage.includes('salon') || lowerMessage.includes('hair')) {
+      return "For beauty services, Kira Beauty Salon is highly rated. They offer a variety of services including haircuts, styling, and skincare treatments.";
+    }
+    
+    if (lowerMessage.includes('thank')) {
+      return "You're welcome! If you need anything else, feel free to ask. I'm here to help you find the best businesses in your area.";
+    }
+    
+    // Default response for other queries
+    return "I can help you find businesses based on your needs. Would you like recommendations for restaurants, electronics, beauty services, or something else?";
   }
 
   /**

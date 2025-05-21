@@ -25,6 +25,7 @@ import searchRoutes from "./routes/search";
 import customerProfileRoutes from "./routes/customerProfile";
 import favoriteRoutes from "./routes/favorites";
 import customerTransactionRoutes from "./routes/customerTransaction";
+import chatbotRoutes from "./routes/chatbot";
 import notificationRoutes from "./routes/notification";
 import uploadRoutes from "./routes/upload";
 import locationRoutes from "./routes/location";
@@ -106,5 +107,8 @@ app.use("/api/recurring-appointments", recurringAppointmentRoutes);
 // Analytics and inventory routes
 app.use("/api/analytics", businessAnalyticsRoutes);
 app.use("/api/inventory", inventoryRoutes);
+
+// Chatbot routes
+app.use("/api/chatbot", chatbotRoutes);
 
 export default app;

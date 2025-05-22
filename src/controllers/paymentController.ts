@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 import {User} from "../models/user"
 import { Service } from "../models/service";
 import axios from "axios"
-import { Appointment } from "src/models/appointment";
+import { Appointment } from "../models/appointment";
 
 
 const chapa = new Chapa({

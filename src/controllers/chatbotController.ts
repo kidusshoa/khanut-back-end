@@ -29,16 +29,36 @@ export const processCustomerChat = async (req: AuthenticatedRequest, res: Respon
       return res.status(400).json({ message: 'Message is required' });
     }
 
+    // Validate history format if provided
+    if (history && (!Array.isArray(history) || history.some(item => !item.role || !item.content))) {
+      logger.warn(`Invalid history format provided by user ${userId}`);
+      // Continue with empty history rather than failing
+    }
+
+    // Format history properly if it exists
+    const formattedHistory = Array.isArray(history) ? 
+      history.filter(item => item.role && item.content) : [];
+
     logger.info(`Processing chat message from customer ${userId}`);
     
     // Generate response using Gemini
     const response = await geminiService.generateCustomerResponse(
       userId,
       message,
-      history || []
+      formattedHistory
     );
 
-    return res.status(200).json({ response });
+    // Return the response along with the updated history for client-side storage
+    const updatedHistory = [
+      ...formattedHistory,
+      { role: 'user', content: message },
+      { role: 'assistant', content: response }
+    ];
+
+    return res.status(200).json({ 
+      response,
+      history: updatedHistory
+    });
   } catch (error) {
     logger.error('Error in customer chat processing:', error);
     return res.status(500).json({ message: 'Server error' });

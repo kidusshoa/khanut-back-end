@@ -187,7 +187,7 @@ export const createAppointment = async (req: Request, res: Response) => {
 export const updateAppointmentStatus = async (req: Request, res: Response) => {
   try {
     const { appointmentId } = req.params;
-    const { status } = req.body;
+    const { status, reason } = req.body;
 
     if (!["pending", "confirmed", "cancelled", "completed"].includes(status)) {
       return res.status(400).json({ message: "Invalid status" });
@@ -199,6 +199,18 @@ export const updateAppointmentStatus = async (req: Request, res: Response) => {
     }
 
     appointment.status = status as AppointmentStatus;
+    
+    // Store cancellation reason if provided and status is cancelled
+    if (status === "cancelled" && reason) {
+      // Check if notes field exists, if not initialize it
+      if (!appointment.notes) {
+        appointment.notes = "";
+      }
+      
+      // Add cancellation reason to notes
+      appointment.notes = `${appointment.notes}\nCancellation reason: ${reason}`.trim();
+    }
+    
     await appointment.save();
 
     return res.status(200).json(appointment);

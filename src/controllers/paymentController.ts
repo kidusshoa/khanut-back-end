@@ -2,7 +2,6 @@ import { Chapa } from "chapa-nodejs";
 import { AuthRequest } from "../middleware/auth";
 import { Request, Response } from "express";
 import {User} from "../models/user"
-import { Service } from "../models/service";
 import axios from "axios"
 import { Appointment } from "../models/appointment";
 
@@ -16,19 +15,19 @@ try{
   const txRef = await chapa.genTxRef();
   const appointmentId = req.params.appointmentId;
 
-  const service = await Service.findById(appointmentId) 
-  if (!service){
+  const appointment = await Appointment.findById(appointmentId) 
+  if (!appointment){
     return res.status(404).json({ message: "Appointment not found" });
   }
-  service.txRef = txRef;
-  await service.save();
+  appointment.txRef = txRef;
+  await appointment.save();
 
   const user = await User.findById(req.user?.id);
   
   const [firstName, lastName] = user?.name.split(" ") || [];
 
 const {data:response} = await axios.post("https://api.chapa.co/v1/transaction/initialize", {
-  "amount": service.price.toString(),
+  "amount": appointment.price.toString(),
   "currency": "ETB",
   "first_name": firstName,
   "last_name": lastName,
@@ -53,16 +52,12 @@ const {data:response} = await axios.post("https://api.chapa.co/v1/transaction/in
 
 export const webHook = async (req: Request, res: Response)=>{
     try{const body = req.body as any
-    const service = await Service.findOne({txRef:body.tx_ref})
-    if(!service){
-      return res.status(404).json({ message: "Appointment not found" });
-    }
-    const appointment = await Appointment.findOne({serviceId:service._id})
+    const appointment = await Appointment.findOne({txRef:body.tx_ref})
     if(!appointment){
       return res.status(404).json({ message: "Appointment not found" });
     }
-    appointment.paymentStatus = "paid";
-    await appointment.save();
+    appointment.paymentStatus = "paid"
+    await appointment.save() ;
 
     return res.status(200).json({ message: "Payment successful" });
   }catch(error:any){
@@ -70,4 +65,6 @@ export const webHook = async (req: Request, res: Response)=>{
     return res.status(500).json({ message: "Payment failed" , error: error.message});
   }
 }
+   
+ 
 

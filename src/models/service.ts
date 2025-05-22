@@ -19,6 +19,7 @@ export interface IService extends Document {
   inventory?: number; // for product-based services
   rating?: number; // average rating
   reviewCount?: number; // number of reviews
+  txRef?: string;
   createdAt: Date;
   updatedAt: Date;
 }

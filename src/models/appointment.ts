@@ -23,6 +23,7 @@ export interface IAppointment extends Document {
   notes?: string;
   isRecurring?: boolean;
   recurringId?: mongoose.Types.ObjectId;
+  txRef?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -89,6 +90,9 @@ const AppointmentSchema: Schema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "RecurringAppointment",
     },
+  txRef: { 
+    type: String,
+  },
   },
   { timestamps: true }
 );
